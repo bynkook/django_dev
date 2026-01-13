@@ -1,0 +1,10 @@
+# .gitignore
+.venv/
+node_modules/
+__pycache__/
+migrations/
+test/
+doc/
+*.sqlite3
+*.toml
+*.log
