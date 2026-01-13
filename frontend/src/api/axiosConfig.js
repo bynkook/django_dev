@@ -14,13 +14,13 @@ export const djangoClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // 쿠키/세션 인증 지원
+  withCredentials: true,
 });
 
-// Django Request Interceptor: 토큰 자동 주입
+// [수정] localStorage -> sessionStorage로 변경
 djangoClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('authToken');
+    const token = sessionStorage.getItem('authToken'); 
     if (token) {
       config.headers['Authorization'] = `Token ${token}`;
     }

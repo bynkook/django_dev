@@ -37,9 +37,11 @@ const LoginPage = () => {
       }
 
       if (data.token) {
-        localStorage.setItem('authToken', data.token);
-        localStorage.setItem('userId', data.user_id);
-        localStorage.setItem('username', data.username);
+        sessionStorage.setItem('authToken', data.token);
+        sessionStorage.setItem('userId', data.user_id);
+        sessionStorage.setItem('username', data.username);
+        // 로그인 API가 email을 안주면 입력한 값을 사용 (실제론 백엔드에서 주는게 좋음)
+        sessionStorage.setItem('email', data.email || formData.email || 'user@samsung.com');         
         navigate('/chat');
       }
     } catch (err) {

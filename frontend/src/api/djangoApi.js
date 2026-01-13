@@ -16,6 +16,16 @@ export const authApi = {
   },
 };
 
+// [추가] Agent 목록 조회 API
+// Backend urls.py에 추가한 path('agents/', ...) 와 매핑됩니다.
+// 기존 패턴에 맞춰 /api/ 접두사를 포함합니다.
+export const agentApi = {
+  getAgents: async () => {
+    const response = await djangoClient.get('/api/agents/');
+    return response.data;
+  },
+};
+
 export const chatApi = {
   // 대화방 목록 조회
   getSessions: async () => {
@@ -49,6 +59,7 @@ export const chatApi = {
 
   // 대화방 삭제
   deleteSession: async (sessionId) => {
-    await djangoClient.delete(`/api/sessions/${sessionId}/`);
+    const response = await djangoClient.delete(`/api/sessions/${sessionId}/`);
+    return response.data;
   },
 };

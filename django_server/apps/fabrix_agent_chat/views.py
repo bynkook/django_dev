@@ -9,6 +9,32 @@ from django.conf import settings
 from .models import ChatSession, ChatMessage
 from .serializers import ChatSessionSerializer, ChatSessionDetailSerializer, ChatMessageSerializer
 
+import requests
+from django.conf import settings
+
+class AgentListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        # settings.py에서 로드한 secrets.toml 설정 사용
+        fabrix_conf = getattr(settings, 'SECRETS', {}).get('fabrix_api', {})
+        
+        base_url = fabrix_conf.get('base_url', '').rstrip('/')
+        target_url = f"{base_url}/openapi/agent-chat/v1/agents"
+        
+        headers = {
+            'Content-Type': 'application/json',
+            'x-fabrix-client': fabrix_conf.get('client_key'),
+            'x-openapi-token': fabrix_conf.get('openapi_token'),
+        }
+        
+        try:
+            # FabriX API 호출
+            response = requests.get(target_url, headers=headers, params={'page': 1, 'limit': 100})
+            return Response(response.json(), status=response.status_code)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 class SignUpView(APIView):
     """
     [POST] /api/auth/signup/
