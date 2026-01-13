@@ -37,11 +37,16 @@ const LoginPage = () => {
       }
 
       if (data.token) {
+        // [검토 완료] Backend가 보내준 email을 우선적으로 사용하도록 수정됨
+        // sessionStorage 사용 (브라우저 종료 시 로그아웃)
         sessionStorage.setItem('authToken', data.token);
         sessionStorage.setItem('userId', data.user_id);
         sessionStorage.setItem('username', data.username);
-        // 로그인 API가 email을 안주면 입력한 값을 사용 (실제론 백엔드에서 주는게 좋음)
-        sessionStorage.setItem('email', data.email || formData.email || 'user@samsung.com');         
+        
+        // [핵심] Backend에서 email이 오면 그것을 저장, 없으면 입력값(회원가입시), 그것도 없으면 기본값
+        const emailToSave = data.email || formData.email || 'user@example.com';
+        sessionStorage.setItem('email', emailToSave);
+        
         navigate('/chat');
       }
     } catch (err) {
