@@ -16,23 +16,39 @@ const MainLayout = () => {
           ${isSidebarOpen ? 'w-[280px] translate-x-0' : 'w-0 -translate-x-full opacity-0 overflow-hidden'}
         `}
       >
-        <div className="w-[280px] h-full">
-           <Sidebar />
+        <div className="w-[280px] h-full flex flex-col">
+          {/* Sidebar Close Button */}
+          <div className="flex-shrink-0 h-14 flex items-center justify-end px-3 border-b border-[var(--border-color)]">
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-all duration-200"
+              title="Close Sidebar"
+            >
+              <PanelLeftClose size={20} />
+            </button>
+          </div>
+          
+          {/* Sidebar Content */}
+          <div className="flex-1 overflow-hidden">
+            <Sidebar />
+          </div>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col h-full relative min-w-0 bg-[var(--bg-primary)]">
-        {/* Toggle Button (Floating) */}
-        <div className="absolute top-4 left-4 z-40">
-          <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-all duration-200"
-            title={isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
-          >
-            {isSidebarOpen ? <PanelLeftClose size={20} /> : <PanelLeftOpen size={20} />}
-          </button>
-        </div>
+      <main className="flex-1 flex flex-col h-full min-w-0 bg-[var(--bg-primary)]">
+        {/* Sidebar Open Button - Only show when sidebar is closed */}
+        {!isSidebarOpen && (
+          <div className="flex-shrink-0 h-14 flex items-center px-4 border-b border-[var(--border-color)] bg-[var(--bg-primary)]/80 backdrop-blur-md">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-all duration-200 shadow-sm"
+              title="Open Sidebar"
+            >
+              <PanelLeftOpen size={20} />
+            </button>
+          </div>
+        )}
 
         <Outlet />
       </main>
