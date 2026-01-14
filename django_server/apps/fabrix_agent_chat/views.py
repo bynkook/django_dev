@@ -25,6 +25,7 @@ class AgentListView(APIView):
             'Content-Type': 'application/json',
             'x-fabrix-client': fabrix_conf.get('client_key'),
             'x-openapi-token': fabrix_conf.get('openapi_token'),
+            'x-generative-ai-user-email': fabrix_conf.get('user_email', ''),
         }
         
         try:
