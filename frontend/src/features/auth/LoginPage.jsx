@@ -12,6 +12,7 @@ const LoginPage = () => {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
+    password_confirm: '',  // 비밀번호 확인 필드 추가
     email: '',
     auth_key: '',
   });
@@ -23,6 +24,13 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    
+    // 회원가입 시 비밀번호 확인 검증
+    if (!isLoginMode && formData.password !== formData.password_confirm) {
+      setError('Passwords do not match. Please try again.');
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
@@ -59,13 +67,13 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-primary)] p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-primary)] p-4 overflow-y-auto">
       {/* 배경 데코레이션 (선택 사항: 은은한 그라데이션 원) */}
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[var(--accent-color)] rounded-full opacity-5 blur-[100px] pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-500 rounded-full opacity-5 blur-[100px] pointer-events-none"></div>
 
       {/* 메인 카드 컨테이너 */}
-      <div className="relative w-full max-w-[520px] bg-[var(--bg-secondary)] rounded-3xl shadow-2xl border border-[var(--border-color)] overflow-hidden transition-all duration-300">
+      <div className="relative w-full max-w-[520px] my-8 bg-[var(--bg-secondary)] rounded-3xl shadow-2xl border border-[var(--border-color)] overflow-hidden transition-all duration-300">
        
         {/* 상단 헤더 영역 */}
         <div className="px-10 pt-12 pb-8 text-center">
@@ -127,6 +135,29 @@ const LoginPage = () => {
           {/* 회원가입 추가 필드 */}
           {!isLoginMode && (
             <>
+              {/* Password Confirm - 회원가입 시에만 표시 */}
+              <div className="space-y-1.5 animate-slide-in">
+                <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider ml-1">Confirm Password</label>
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-[var(--accent-color)] transition-colors" size={20} />
+                  <input
+                    type="password"
+                    name="password_confirm"
+                    value={formData.password_confirm}
+                    onChange={handleChange}
+                    required
+                    className="w-full pl-12 pr-4 py-3.5 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:border-transparent transition-all duration-200"
+                    placeholder="••••••••"
+                  />
+                </div>
+                {/* 실시간 일치 여부 표시 */}
+                {formData.password_confirm && (
+                  <p className={`text-xs ml-1 ${formData.password === formData.password_confirm ? 'text-green-600' : 'text-red-500'}`}>
+                    {formData.password === formData.password_confirm ? '✓ Passwords match' : '✗ Passwords do not match'}
+                  </p>
+                )}
+              </div>
+
               <div className="space-y-1.5 animate-slide-in">
                 <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider ml-1">Email</label>
                 <div className="relative group">
@@ -186,6 +217,14 @@ const LoginPage = () => {
               onClick={() => {
                 setIsLoginMode(!isLoginMode);
                 setError('');
+                // 폼 초기화
+                setFormData({
+                  username: '',
+                  password: '',
+                  password_confirm: '',
+                  email: '',
+                  auth_key: '',
+                });
               }}
               className="text-[var(--accent-color)] font-bold hover:underline ml-1 transition-colors outline-none"
             >
