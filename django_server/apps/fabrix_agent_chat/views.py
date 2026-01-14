@@ -28,10 +28,24 @@ class AgentListView(APIView):
         }
         
         try:
-            response = requests.get(target_url, headers=headers, params={'page': 1, 'limit': 100})
+            # Add timeout to prevent hanging requests
+            response = requests.get(
+                target_url, 
+                headers=headers, 
+                params={'page': 1, 'limit': 100},
+                timeout=10  # 10 second timeout
+            )
             return Response(response.json(), status=response.status_code)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except requests.Timeout:
+            return Response(
+                {'error': 'Request to FabriX API timed out'}, 
+                status=status.HTTP_504_GATEWAY_TIMEOUT
+            )
+        except requests.RequestException as e:
+            return Response(
+                {'error': str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class SignUpView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -59,11 +73,10 @@ class SignUpView(APIView):
         if received_key != expected_key_str:
             return Response({'error': 'Invalid Auth Key.'}, status=status.HTTP_403_FORBIDDEN)
 
-        # 사용자명 중복 검사
+        # Use exists() instead of filter() for better performance
         if User.objects.filter(username=username).exists():
             return Response({'error': 'Username already exists.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 이메일 중복 검사
         if User.objects.filter(email=email).exists():
             return Response({'error': 'Email already exists.'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -72,7 +85,8 @@ class SignUpView(APIView):
             user.is_active = True
             user.save()
 
-            token, _ = Token.objects.get_or_create(user=user)
+            # Create token directly instead of get_or_create since user is new
+            token = Token.objects.create(user=user)
             
             return Response({
                 'message': 'Signup successful.',
@@ -122,7 +136,15 @@ class ChatSessionViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return ChatSession.objects.filter(user=self.request.user)
+        queryset = ChatSession.objects.filter(user=self.request.user)
+        # Optimize queries based on action
+        if self.action == 'retrieve':
+            # Prefetch messages for detail view to avoid N+1 queries
+            queryset = queryset.prefetch_related('messages')
+        elif self.action == 'list':
+            # Only select related user for list view
+            queryset = queryset.select_related('user')
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

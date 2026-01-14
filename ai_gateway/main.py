@@ -139,12 +139,13 @@ async def chat_with_file(
     headers.pop("Content-Type", None)
 
     try:
-        # 1. 파일 읽기 (메모리)
-        file_content = await file.read()
+        # Use file-like object directly instead of reading into memory
+        # This is more memory efficient for large files
+        file.file.seek(0)  # Reset file pointer to beginning
         
         # 2. Multipart 데이터 구성
         files = {
-            'file': (file.filename, file_content, file.content_type)
+            'file': (file.filename, file.file, file.content_type)
         }
         
         # 3. Form 데이터 구성 (contents는 리스트 형태여야 함)
@@ -164,12 +165,16 @@ async def chat_with_file(
             url, 
             headers=headers, 
             files=files, 
-            data={'agentId': agentId, 'isStream': 'False', 'contents': content_list}
+            data={'agentId': agentId, 'isStream': 'False', 'contents': content_list},
+            timeout=30  # Add timeout for large file uploads
         )
         
         response.raise_for_status()
         return response.json()
 
+    except requests.Timeout:
+        print(f"File Upload Timeout")
+        raise HTTPException(status_code=504, detail="File upload timed out")
     except Exception as e:
         print(f"File Upload Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))

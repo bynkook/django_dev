@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Count
 from .models import ChatSession, ChatMessage
 
 # --- ChatMessage Inline ---
@@ -42,14 +43,18 @@ class ChatSessionAdmin(admin.ModelAdmin):
     )
     
     def message_count(self, obj):
-        """메시지 개수 표시"""
-        return obj.messages.count()
+        """메시지 개수 표시 (annotate로 최적화)"""
+        # Use annotated count if available, otherwise fallback to query
+        return getattr(obj, 'message_count_annotated', obj.messages.count())
     message_count.short_description = '메시지 수'
+    message_count.admin_order_field = 'message_count_annotated'
     
     def get_queryset(self, request):
-        """쿼리 최적화: user 정보를 함께 가져옴"""
+        """쿼리 최적화: user 정보를 함께 가져오고 메시지 수를 annotation으로 계산"""
         qs = super().get_queryset(request)
-        return qs.select_related('user').prefetch_related('messages')
+        return qs.select_related('user').annotate(
+            message_count_annotated=Count('messages')
+        )
 
 
 # --- ChatMessage Admin ---
@@ -105,13 +110,15 @@ class CustomUserAdmin(BaseUserAdmin):
     list_display = ('username', 'email', 'first_name', 'last_name', 'session_count', 'is_staff', 'date_joined')
     
     def session_count(self, obj):
-        """사용자의 총 세션 수"""
-        return obj.sessions.count()
+        """사용자의 총 세션 수 (annotate로 최적화)"""
+        # Use annotated count if available, otherwise fallback to query
+        return getattr(obj, 'session_count_annotated', obj.sessions.count())
     session_count.short_description = '대화 세션 수'
+    session_count.admin_order_field = 'session_count_annotated'
     
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.prefetch_related('sessions')
+        return qs.annotate(session_count_annotated=Count('sessions'))
 
 
 # --- Admin Site 커스터마이징 ---
