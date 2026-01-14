@@ -139,14 +139,18 @@ async def chat_with_file(
     headers.pop("Content-Type", None)
 
     try:
-        # Use file-like object directly instead of reading into memory
-        # This is more memory efficient for large files
-        file.file.seek(0)  # Reset file pointer to beginning
-        
-        # 2. Multipart 데이터 구성
-        files = {
-            'file': (file.filename, file.file, file.content_type)
-        }
+        # Try to use file object directly for streaming, otherwise read into memory
+        try:
+            file.file.seek(0)  # Reset file pointer to beginning
+            files = {
+                'file': (file.filename, file.file, file.content_type)
+            }
+        except (AttributeError, OSError):
+            # Fallback: read file into memory if streaming is not supported
+            file_content = await file.read()
+            files = {
+                'file': (file.filename, file_content, file.content_type)
+            }
         
         # 3. Form 데이터 구성 (contents는 리스트 형태여야 함)
         # 클라이언트에서 contents를 단순 문자열로 보냈다면 리스트로 변환
