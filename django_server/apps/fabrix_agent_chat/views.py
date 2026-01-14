@@ -45,25 +45,34 @@ class SignUpView(APIView):
         if not all([username, password, email, auth_key]):
             return Response({'error': 'All fields are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Admin Key 검증
         if auth_key != getattr(settings, 'ADMIN_SIGNUP_KEY', ''):
             return Response({'error': 'Invalid Auth Key.'}, status=status.HTTP_403_FORBIDDEN)
 
+        # 사용자명 중복 검사
         if User.objects.filter(username=username).exists():
             return Response({'error': 'Username already exists.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        user = User.objects.create_user(username=username, email=email, password=password)
-        user.is_active = True
-        user.save()
+        # 이메일 중복 검사
+        if User.objects.filter(email=email).exists():
+            return Response({'error': 'Email already exists.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        token, _ = Token.objects.get_or_create(user=user)
-        
-        return Response({
-            'message': 'Signup successful.',
-            'token': token.key,
-            'user_id': user.pk,
-            'username': user.username,
-            'email': user.email  # [수정] 이메일 반환 추가
-        }, status=status.HTTP_201_CREATED)
+        try:
+            user = User.objects.create_user(username=username, email=email, password=password)
+            user.is_active = True
+            user.save()
+
+            token, _ = Token.objects.get_or_create(user=user)
+            
+            return Response({
+                'message': 'Signup successful.',
+                'token': token.key,
+                'user_id': user.pk,
+                'username': user.username,
+                'email': user.email
+            }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'error': f'Signup failed: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -72,15 +81,29 @@ class LoginView(APIView):
         username = request.data.get('username')
         password = request.data.get('password')
         
+        # 입력값 검증
+        if not username or not password:
+            return Response(
+                {'error': 'Username and password are required.'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         user = authenticate(username=username, password=password)
         if user:
+            # 계정 활성화 상태 확인
+            if not user.is_active:
+                return Response(
+                    {'error': 'Account is disabled.'}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
             login(request, user)
             token, _ = Token.objects.get_or_create(user=user)
             return Response({
                 'token': token.key,
                 'user_id': user.pk,
                 'username': user.username,
-                'email': user.email  # [수정] 핵심: 이메일 반환 추가
+                'email': user.email
             })
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 

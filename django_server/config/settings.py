@@ -117,9 +117,10 @@ REST_FRAMEWORK = {
 # 12. Custom Auth Settings (Admin Key)
 ADMIN_SIGNUP_KEY = SECRETS['auth']['admin_signup_key']
 
-# [수정 1] FabriX API 설정 노출 (secrets.toml에서 로드된 값 사용)
+# FabriX API 설정 노출 (secrets.toml에서 로드된 값 사용)
 FABRIX_API_CONFIG = SECRETS.get('fabrix_api', {})
 
-# [수정 2] 브라우저 종료 시 세션 만료 (문제 5번 해결)
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_COOKIE_AGE = 1800  # 30분 후 만료 (선택 사항)
+# 브라우저 종료 시 세션 만료
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # 브라우저 닫으면 세션 삭제
+SESSION_COOKIE_AGE = 1800  # 30분 후 자동 만료 (선택 사항)
+SESSION_SAVE_EVERY_REQUEST = True  # 요청마다 세션 갱신 (활동 중에는 유지)

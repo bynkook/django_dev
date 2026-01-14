@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
-import { Bot, Sparkles, AlertCircle, ChevronDown } from 'lucide-react';
+import { Bot, Sparkles, AlertCircle } from 'lucide-react';
 
 import ChatBubble from './components/ChatBubble';
 import InputBox from './components/InputBox';
@@ -23,6 +23,16 @@ const ChatPage = () => {
   const abortControllerRef = useRef(null);
   const messagesEndRef = useRef(null);
 
+  // Agent 목록을 window 이벤트로부터 받음 (Sidebar에서 관리)
+  useEffect(() => {
+    const handleAgentSelected = (e) => {
+      setSelectedAgentId(e.detail.agentId);
+    };
+    
+    window.addEventListener('agent-selected', handleAgentSelected);
+    return () => window.removeEventListener('agent-selected', handleAgentSelected);
+  }, []);
+
   // --- Initial Load ---
   useEffect(() => {
     const loadAgents = async () => {
@@ -30,7 +40,9 @@ const ChatPage = () => {
         const data = await fastApi.getAgents();
         if (data.items?.length > 0) {
           setAgents(data.items);
-          setSelectedAgentId(data.items[0].agentId);
+          if (!selectedAgentId) {
+            setSelectedAgentId(data.items[0].agentId);
+          }
         }
       } catch (err) { setError("Failed to load agents."); }
     };
@@ -63,6 +75,11 @@ const ChatPage = () => {
   // --- Handlers (Send & Stop) ---
   const handleSend = async (text, file) => {
     if (isLoading) return;
+    if (!selectedAgentId) {
+      setError("Please select an agent first.");
+      return;
+    }
+    
     setError(null);
     setIsLoading(true);
 
@@ -141,27 +158,24 @@ const ChatPage = () => {
     }
   };
 
+  const currentAgent = agents.find(a => a.agentId === selectedAgentId);
+
   return (
     <div className="flex flex-col h-full bg-[var(--bg-primary)]">
      
-      {/* 1. Header: Glassmorphism effect */}
+      {/* Header: 선택된 Agent 표시만 (선택은 Sidebar에서) */}
       <header className="flex-shrink-0 h-16 flex items-center justify-between px-6 border-b border-[var(--border-color)] bg-[var(--bg-primary)]/80 backdrop-blur-md sticky top-0 z-10">
-        <div className="flex items-center gap-2 relative group">
+        <div className="flex items-center gap-3">
           <div className="p-2 bg-blue-100 rounded-lg text-[var(--accent-color)]">
             <Bot size={20} />
           </div>
-          <div className="relative">
-            <select
-              className="appearance-none bg-transparent text-[var(--text-primary)] font-bold text-sm pr-8 py-1 focus:outline-none cursor-pointer"
-              value={selectedAgentId}
-              onChange={(e) => setSelectedAgentId(e.target.value)}
-              disabled={isLoading || messages.length > 0}
-            >
-              {agents.map((agent) => (
-                <option key={agent.agentId} value={agent.agentId}>{agent.label}</option>
-              ))}
-            </select>
-            <ChevronDown size={14} className="absolute right-0 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] pointer-events-none" />
+          <div>
+            <p className="text-sm font-bold text-[var(--text-primary)]">
+              {currentAgent?.label || 'No Agent Selected'}
+            </p>
+            <p className="text-xs text-[var(--text-secondary)]">
+              {currentAgent?.agentId ? `ID: ${currentAgent.agentId.slice(0, 8)}...` : 'Select from sidebar'}
+            </p>
           </div>
         </div>
         {error && (
@@ -171,7 +185,7 @@ const ChatPage = () => {
         )}
       </header>
 
-      {/* 2. Chat Area */}
+      {/* Chat Area */}
       <div className="flex-1 overflow-y-auto px-4 py-8 custom-scrollbar scroll-smooth">
         <div className="max-w-3xl mx-auto flex flex-col gap-6">
           {messages.length === 0 ? (
@@ -181,7 +195,7 @@ const ChatPage = () => {
               </div>
               <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">How can I help you today?</h2>
               <p className="text-[var(--text-secondary)] max-w-md leading-relaxed">
-                Select an agent from the top menu and start a conversation. I can help you analyze files, write code, or answer questions.
+                Select an agent from the sidebar and start a conversation. I can help you analyze files, write code, or answer questions.
               </p>
             </div>
           ) : (
@@ -197,7 +211,7 @@ const ChatPage = () => {
         </div>
       </div>
 
-      {/* 3. Input Area */}
+      {/* Input Area */}
       <div className="flex-shrink-0 p-4 pb-6 bg-[var(--bg-primary)] z-20">
         <div className="max-w-3xl mx-auto">
           <InputBox onSend={handleSend} isLoading={isLoading} onStop={handleStop} />
