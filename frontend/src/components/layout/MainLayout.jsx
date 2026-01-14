@@ -17,21 +17,8 @@ const MainLayout = () => {
         `}
       >
         <div className="w-[280px] h-full flex flex-col">
-          {/* Sidebar Close Button */}
-          <div className="flex-shrink-0 h-14 flex items-center justify-end px-3 border-b border-[var(--border-color)]">
-            <button
-              onClick={() => setIsSidebarOpen(false)}
-              className="p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-all duration-200"
-              title="Close Sidebar"
-            >
-              <PanelLeftClose size={20} />
-            </button>
-          </div>
-          
-          {/* Sidebar Content */}
-          <div className="flex-1 overflow-hidden">
-            <Sidebar />
-          </div>
+          {/* Sidebar Content with toggle handler */}
+          <Sidebar onToggleSidebar={() => setIsSidebarOpen(false)} />
         </div>
       </aside>
 

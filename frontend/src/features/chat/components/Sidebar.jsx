@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { MessageSquare, Plus, Trash2, MoreHorizontal, UserCircle, Bot, ChevronDown, Check, LogOut } from 'lucide-react';
+import { MessageSquare, Plus, Trash2, MoreHorizontal, UserCircle, Bot, ChevronDown, Check, LogOut, Menu, Search } from 'lucide-react';
 import { chatApi, agentApi } from '../../../api/djangoApi';
 
-const Sidebar = () => {
+const Sidebar = ({ onToggleSidebar }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const currentSessionId = searchParams.get('session_id');
@@ -100,8 +100,29 @@ const Sidebar = () => {
   return (
     <div className="flex flex-col h-full bg-[var(--bg-secondary)] text-[var(--text-primary)] font-sans">
       
-      {/* Header Area */}
-      <div className="p-4 pt-5 space-y-3">
+      {/* Gemini-style Top Bar: Breadcrumb + Search */}
+      <div className="flex-shrink-0 h-14 flex items-center justify-between px-4 border-b border-[var(--border-color)]">
+        {/* Left: Breadcrumb (Menu Icon) */}
+        <button
+          onClick={onToggleSidebar}
+          className="p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-all duration-200"
+          title="Close Sidebar"
+        >
+          <Menu size={20} />
+        </button>
+        
+        {/* Right: Search Icon */}
+        <button
+          onClick={() => {/* TODO: Search functionality */}}
+          className="p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-all duration-200"
+          title="Search conversations"
+        >
+          <Search size={20} />
+        </button>
+      </div>
+
+      {/* Header Area - Agent Selector */}
+      <div className="p-4 space-y-3 border-b border-[var(--border-color)]">
         
         {/* [문제 1 해결] Agent Selector */}
         <div className="relative">
