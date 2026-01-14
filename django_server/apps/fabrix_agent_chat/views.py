@@ -52,18 +52,12 @@ class SignUpView(APIView):
         received_key = str(auth_key).strip() if auth_key else ''
         expected_key_str = str(expected_key).strip()
         
-        # 디버깅: 실제 값 로그 출력 (개발 환경에서만)
+        # 개발 환경에서 디버그 로그 출력
         if settings.DEBUG:
-            print(f"[DEBUG Signup] Received auth_key: '{received_key}' (len={len(received_key)})")
-            print(f"[DEBUG Signup] Expected ADMIN_SIGNUP_KEY: '{expected_key_str}' (len={len(expected_key_str)})")
-            print(f"[DEBUG Signup] Match: {received_key == expected_key_str}")
+            print(f"[Signup Debug] Auth Key Match: {received_key == expected_key_str}")
         
         if received_key != expected_key_str:
-            error_msg = 'Invalid Auth Key.'
-            # DEBUG 모드일 때만 상세 정보 포함
-            if settings.DEBUG:
-                error_msg = f'Invalid Auth Key. (Received: "{received_key}", Expected: "{expected_key_str}")'
-            return Response({'error': error_msg}, status=status.HTTP_403_FORBIDDEN)
+            return Response({'error': 'Invalid Auth Key.'}, status=status.HTTP_403_FORBIDDEN)
 
         # 사용자명 중복 검사
         if User.objects.filter(username=username).exists():
