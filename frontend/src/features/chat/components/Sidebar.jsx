@@ -42,9 +42,12 @@ const Sidebar = () => {
       // 기본값 선택
       if (items.length > 0 && !selectedAgent) {
         setSelectedAgent(items[0]);
-        // ChatPage에 선택된 Agent 전달
+        // ChatPage에 선택된 Agent 전달 (agent 객체도 함께)
         window.dispatchEvent(new CustomEvent('agent-selected', { 
-          detail: { agentId: items[0].agentId } 
+          detail: { 
+            agentId: items[0].agentId,
+            agent: items[0]
+          } 
         }));
       }
     } catch (error) {
@@ -56,9 +59,12 @@ const Sidebar = () => {
   const handleAgentSelect = (agent) => {
     setSelectedAgent(agent);
     setIsAgentMenuOpen(false);
-    // ChatPage에 선택 이벤트 전달
+    // ChatPage에 선택 이벤트 전달 (agent 객체도 함께)
     window.dispatchEvent(new CustomEvent('agent-selected', { 
-      detail: { agentId: agent.agentId } 
+      detail: { 
+        agentId: agent.agentId,
+        agent: agent
+      } 
     }));
   };
 

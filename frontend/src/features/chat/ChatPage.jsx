@@ -27,26 +27,17 @@ const ChatPage = () => {
   useEffect(() => {
     const handleAgentSelected = (e) => {
       setSelectedAgentId(e.detail.agentId);
+      // Agent 정보도 함께 받아서 저장
+      if (e.detail.agent) {
+        setAgents(prev => {
+          const exists = prev.find(a => a.agentId === e.detail.agent.agentId);
+          return exists ? prev : [...prev, e.detail.agent];
+        });
+      }
     };
     
     window.addEventListener('agent-selected', handleAgentSelected);
     return () => window.removeEventListener('agent-selected', handleAgentSelected);
-  }, []);
-
-  // --- Initial Load ---
-  useEffect(() => {
-    const loadAgents = async () => {
-      try {
-        const data = await fastApi.getAgents();
-        if (data.items?.length > 0) {
-          setAgents(data.items);
-          if (!selectedAgentId) {
-            setSelectedAgentId(data.items[0].agentId);
-          }
-        }
-      } catch (err) { setError("Failed to load agents."); }
-    };
-    loadAgents();
   }, []);
 
   // --- Session Load ---
