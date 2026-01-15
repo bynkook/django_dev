@@ -1,5 +1,4 @@
 import httpx
-import asyncio
 from asgiref.sync import async_to_sync
 from django.conf import settings
 from django.http import JsonResponse
@@ -41,6 +40,7 @@ class AgentListView(APIView):
                     headers=headers,
                     params={'page': 1, 'limit': 100}
                 )
+                response.raise_for_status()
                 return JsonResponse(response.json(), status=response.status_code, safe=False)
         except httpx.TimeoutException:
             return JsonResponse(

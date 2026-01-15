@@ -4,6 +4,7 @@ import toml
 import httpx
 from pathlib import Path
 from typing import List, Optional
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,8 +30,18 @@ SERVER_CONFIG = SECRETS['server']
 FABRIX_BASE_URL = FABRIX_CONFIG['base_url'].rstrip('/')
 FABRIX_AGENT_URL = f"{FABRIX_BASE_URL}/openapi/agent-chat/v1"
 
+# Lifecycle management for HTTP client
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Manage HTTP client lifecycle"""
+    # Startup: Create shared AsyncClient
+    app.state.http_client = httpx.AsyncClient(timeout=30.0)
+    yield
+    # Shutdown: Close AsyncClient
+    await app.state.http_client.aclose()
+
 # 2. FastAPI 앱 초기화
-app = FastAPI(title="FabriX AI Gateway")
+app = FastAPI(title="FabriX AI Gateway", lifespan=lifespan)
 
 # 3. CORS 설정 (React 연동 및 사내망 서비스 모드 지원)
 app.add_middleware(
@@ -40,17 +51,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Lifecycle events for HTTP client management
-@app.on_event("startup")
-async def startup_event():
-    """Create shared AsyncClient on startup"""
-    app.state.http_client = httpx.AsyncClient(timeout=30.0)
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Close AsyncClient on shutdown"""
-    await app.state.http_client.aclose()
 
 # 4. 공통 헤더 생성 함수
 def get_fabrix_headers():
