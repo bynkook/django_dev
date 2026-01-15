@@ -1,5 +1,8 @@
-import requests
+import httpx
+import asyncio
+from asgiref.sync import async_to_sync
 from django.conf import settings
+from django.http import JsonResponse
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -15,6 +18,9 @@ class AgentListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
+        return async_to_sync(self._async_get)(request)
+    
+    async def _async_get(self, request):
         # settings.py의 SECRETS를 통해 로드된 설정 사용
         fabrix_conf = getattr(settings, 'FABRIX_API_CONFIG', {})
         
@@ -29,23 +35,27 @@ class AgentListView(APIView):
         }
         
         try:
-            # Add timeout to prevent hanging requests
-            response = requests.get(
-                target_url, 
-                headers=headers, 
-                params={'page': 1, 'limit': 100},
-                timeout=10  # 10 second timeout
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(
+                    target_url,
+                    headers=headers,
+                    params={'page': 1, 'limit': 100}
+                )
+                return JsonResponse(response.json(), status=response.status_code, safe=False)
+        except httpx.TimeoutException:
+            return JsonResponse(
+                {'error': 'Request timeout to FabriX API'},
+                status=504
             )
-            return Response(response.json(), status=response.status_code)
-        except requests.Timeout:
-            return Response(
-                {'error': 'Request to FabriX API timed out'}, 
-                status=status.HTTP_504_GATEWAY_TIMEOUT
+        except httpx.HTTPStatusError as e:
+            return JsonResponse(
+                {'error': str(e)},
+                status=e.response.status_code
             )
-        except requests.RequestException as e:
-            return Response(
-                {'error': str(e)}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        except Exception as e:
+            return JsonResponse(
+                {'error': f'Failed to fetch agents: {str(e)}'},
+                status=500
             )
 
 class SignUpView(APIView):

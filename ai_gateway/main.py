@@ -1,7 +1,7 @@
 import sys
 import json
 import toml
-import requests
+import httpx
 from pathlib import Path
 from typing import List, Optional
 
@@ -41,6 +41,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Lifecycle events for HTTP client management
+@app.on_event("startup")
+async def startup_event():
+    """Create shared AsyncClient on startup"""
+    app.state.http_client = httpx.AsyncClient(timeout=30.0)
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Close AsyncClient on shutdown"""
+    await app.state.http_client.aclose()
+
 # 4. 공통 헤더 생성 함수
 def get_fabrix_headers():
     return {
@@ -61,7 +72,7 @@ class ChatRequest(BaseModel):
 # --- API Endpoints ---
 
 @app.get("/agents")
-async def get_agents(page: int = 1, limit: int = 50):
+async def get_agents(request: Request, page: int = 1, limit: int = 50):
     """
     [GET] /agents
     FabriX에서 사용 가능한 Agent 목록을 조회합니다.
@@ -71,15 +82,21 @@ async def get_agents(page: int = 1, limit: int = 50):
     headers = get_fabrix_headers()
 
     try:
-        response = requests.get(url, headers=headers, params=params, timeout=10)
+        response = await request.app.state.http_client.get(
+            url, headers=headers, params=params
+        )
         response.raise_for_status()
         return response.json()
-    except requests.exceptions.RequestException as e:
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="Request timeout")
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=str(e))
+    except Exception as e:
         print(f"FabriX API Error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch agents from FabriX")
+        raise HTTPException(status_code=500, detail="Failed to fetch agents")
 
 @app.post("/agent-messages")
-async def chat_stream(req: ChatRequest):
+async def chat_stream(req: ChatRequest, request: Request):
     """
     [POST] /agent-messages
     사용자 메시지를 FabriX로 전송하고, 답변을 SSE 스트림으로 반환합니다.
@@ -98,23 +115,15 @@ async def chat_stream(req: ChatRequest):
         "executeRagStandaloneQuery": True
     }
 
-    def event_generator():
+    async def event_generator():
         try:
-            with requests.post(url, headers=headers, json=payload, stream=True) as r:
-                r.raise_for_status()
-                # FabriX 응답을 한 줄씩 읽어서 클라이언트로 전달 (Pass-through)
-                for line in r.iter_lines():
-                    if line:
-                        decoded_line = line.decode('utf-8')
-                        # FabriX는 "data: {...}" 형태의 문자열을 보냄
-                        # SSE 포맷 유지를 위해 그대로 yield 하거나 필요한 경우 가공
-                        if decoded_line.startswith("data:"):
-                            # "data:" 접두어 제거 후 JSON 파싱하여 검증 가능하나,
-                            # 성능을 위해 그대로 전달 (React에서 파싱)
-                            yield decoded_line + "\n\n"
-                        else:
-                            # heartbeat 등 기타 라인 처리
-                            pass
+            async with request.app.state.http_client.stream(
+                "POST", url, headers=headers, json=payload
+            ) as response:
+                response.raise_for_status()
+                async for line in response.aiter_lines():
+                    if line and line.startswith("data:"):
+                        yield line + "\n\n"
         except Exception as e:
             print(f"Streaming Error: {e}")
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
@@ -123,6 +132,7 @@ async def chat_stream(req: ChatRequest):
 
 @app.post("/agent-messages/file")
 async def chat_with_file(
+    request: Request,
     file: UploadFile = File(...),
     agentId: str = Form(...),
     contents: str = Form(...) # React에서 JSON stringify해서 보냄
@@ -134,51 +144,36 @@ async def chat_with_file(
     """
     url = f"{FABRIX_AGENT_URL}/agent-messages/file"
     
-    # 헤더에서 Content-Type 제거 (requests가 boundary 자동 설정하도록)
+    # 헤더에서 Content-Type 제거 (httpx가 boundary 자동 설정하도록)
     headers = get_fabrix_headers()
     headers.pop("Content-Type", None)
 
     try:
-        # Try to use file object directly for streaming, otherwise read into memory
-        try:
-            file.file.seek(0)  # Reset file pointer to beginning
-            files = {
-                'file': (file.filename, file.file, file.content_type)
-            }
-        except (AttributeError, OSError):
-            # Fallback: read file into memory if streaming is not supported
-            file_content = await file.read()
-            files = {
-                'file': (file.filename, file_content, file.content_type)
-            }
+        file_content = await file.read()
+        files = {
+            'file': (file.filename, file_content, file.content_type)
+        }
         
-        # 3. Form 데이터 구성 (contents는 리스트 형태여야 함)
-        # 클라이언트에서 contents를 단순 문자열로 보냈다면 리스트로 변환
-        content_list = [contents]
-        
+        # Form 데이터 구성
         data = {
             'agentId': agentId,
-            'isStream': 'False', # 파일 분석은 보통 단답형이 많으므로 False 설정 (필요시 변경)
+            'isStream': 'False',
+            'contents': [contents]
         }
-        # requests 라이브러리는 data의 리스트를 multiple value로 처리하므로 주의
-        # FabriX API가 contents를 여러 개의 필드로 받는지, JSON 문자열로 받는지 확인 필요.
-        # 매뉴얼상 List[string]이므로, data에 'contents': ["질문"] 형태로 전달.
         
-        # requests의 data 파라미터에 리스트를 직접 넘기면 form-data의 array로 전송됨
-        response = requests.post(
-            url, 
-            headers=headers, 
-            files=files, 
-            data={'agentId': agentId, 'isStream': 'False', 'contents': content_list},
-            timeout=30  # Add timeout for large file uploads
+        response = await request.app.state.http_client.post(
+            url,
+            headers=headers,
+            files=files,
+            data=data
         )
-        
         response.raise_for_status()
         return response.json()
 
-    except requests.Timeout:
-        print(f"File Upload Timeout")
+    except httpx.TimeoutException:
         raise HTTPException(status_code=504, detail="File upload timed out")
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=str(e))
     except Exception as e:
         print(f"File Upload Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
