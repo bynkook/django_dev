@@ -122,8 +122,11 @@ async def chat_stream(req: ChatRequest, request: Request):
             ) as response:
                 response.raise_for_status()
                 async for line in response.aiter_lines():
-                    if line and line.startswith("data:"):
-                        yield line + "\n\n"
+                    if line:
+                        # bytes를 문자열로 변환
+                        decoded_line = line if isinstance(line, str) else line.decode('utf-8')
+                        if decoded_line.startswith("data:"):
+                            yield decoded_line + "\n\n"
         except Exception as e:
             print(f"Streaming Error: {e}")
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
@@ -149,9 +152,10 @@ async def chat_with_file(
     headers.pop("Content-Type", None)
 
     try:
-        file_content = await file.read()
+        # 스트리밍 방식으로 파일 전송 (메모리 효율적)
+        file.file.seek(0)
         files = {
-            'file': (file.filename, file_content, file.content_type)
+            'file': (file.filename, file.file, file.content_type)
         }
         
         # Form 데이터 구성

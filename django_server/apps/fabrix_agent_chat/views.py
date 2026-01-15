@@ -1,5 +1,4 @@
 import httpx
-from asgiref.sync import async_to_sync
 from django.conf import settings
 from django.http import JsonResponse
 from rest_framework import viewsets, status, permissions
@@ -17,9 +16,6 @@ class AgentListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        return async_to_sync(self._async_get)(request)
-    
-    async def _async_get(self, request):
         # settings.py의 SECRETS를 통해 로드된 설정 사용
         fabrix_conf = getattr(settings, 'FABRIX_API_CONFIG', {})
         
@@ -34,8 +30,9 @@ class AgentListView(APIView):
         }
         
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(
+            # 동기 방식으로 httpx 사용 (WSGI 환경에 최적화)
+            with httpx.Client(timeout=10.0) as client:
+                response = client.get(
                     target_url,
                     headers=headers,
                     params={'page': 1, 'limit': 100}
