@@ -2,6 +2,63 @@
 
 This document outlines the performance optimizations made to the Django/FastAPI application.
 
+## Recent Updates (2026-01-17)
+
+### Multi-Worker Deployment
+Configured production-ready multi-worker setup for handling concurrent requests:
+- **FastAPI Gateway**: 4 workers (uvicorn --workers 4)
+- **Django Server**: Development server with --noreload for stability
+- **Capacity**: ~40-80 concurrent requests/sec (vs 1-2 previously)
+
+### Rate Limiting
+Implemented token-aware rate limiter with automatic retry mechanism:
+- **RPM (Requests Per Minute)**: 100 requests/minute limit
+- **TPM (Tokens Per Minute)**: 10,000 tokens/minute limit
+- **Thread-safe**: Uses locks for concurrent access
+- **Auto-retry**: Automatically waits and retries when rate limit is temporarily exceeded
+- **Max wait time**: 10s for chat, 15s for file uploads
+- **User experience**: Most users won't notice rate limiting (transparent retry)
+- **Monitoring endpoint**: GET /rate-limit-status
+
+Location: `ai_gateway/rate_limiter.py`  
+Details: See [RATE_LIMIT_HANDLING.md](RATE_LIMIT_HANDLING.md) for complete flow
+
+**Retry behavior:**
+```python
+# If rate limit exceeded:
+# 1. Calculate wait time (e.g., 2.5 seconds)
+# 2. Await asyncio.sleep(2.5)
+# 3. Retry up to 3 times
+# 4. Return 429 only if wait > 10s or all retries failed
+```
+
+### HTTP Client Reuse
+Optimized HTTP connections across the application:
+
+**Django (settings.py)**:
+- Shared `httpx.Client` with connection pooling
+- Max 20 keepalive connections, 100 total connections
+- Automatic cleanup on shutdown
+
+**FastAPI (main.py)**:
+- Extended timeout: 60s (for streaming responses)
+- Lifespan-managed AsyncClient with connection reuse
+
+### Enhanced Error Handling
+Improved streaming response reliability:
+- Pre-stream status checks (`raise_for_status()`)
+- Granular exception handling:
+  - `TimeoutException` → 504 with timeout message
+  - `HTTPStatusError` → Status code + detail
+  - `RequestError` → Network error details
+- Structured JSON error responses in SSE format
+
+### Timeout Configuration
+Adjusted timeouts for production workload:
+- **FastAPI Gateway**: 60s read, 10s connect
+- **Django HTTP Client**: 30s total, 10s connect
+- **File uploads**: Uses extended timeout automatically
+
 ## Database Optimizations
 
 ### 1. Database Indexes

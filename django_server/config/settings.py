@@ -128,3 +128,19 @@ FABRIX_API_CONFIG = SECRETS.get('fabrix_api', {})
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # 브라우저 닫으면 세션 삭제
 SESSION_COOKIE_AGE = 1800  # 30분 후 자동 만료 (선택 사항)
 SESSION_SAVE_EVERY_REQUEST = True  # 요청마다 세션 갱신 (활동 중에는 유지)
+
+# 13. HTTP Client Configuration (재사용 가능한 클라이언트)
+import httpx
+import atexit
+
+# 공유 HTTP 클라이언트 생성 (연결 재사용)
+SHARED_HTTP_CLIENT = httpx.Client(
+    timeout=httpx.Timeout(30.0, connect=10.0),
+    limits=httpx.Limits(max_keepalive_connections=20, max_connections=100)
+)
+
+# 애플리케이션 종료 시 클라이언트 닫기
+def cleanup_http_client():
+    SHARED_HTTP_CLIENT.close()
+
+atexit.register(cleanup_http_client)

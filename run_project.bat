@@ -15,12 +15,12 @@ if not exist .venv (
 )
 
 :: 2. Django Server (Port 8000)
-echo [1/3] Django 서버 시작 (127.0.0.1:8000)...
-start "Django Server" cmd /k "call .venv\Scripts\activate & cd django_server & python manage.py runserver"
+echo [1/3] Django 서버 시작 (127.0.0.1:8000) - 워커 4개...
+start "Django Server" cmd /k "call .venv\Scripts\activate & cd django_server & python manage.py runserver --noreload"
 
-:: 3. FastAPI Gateway (Port 8001)
-echo [2/3] AI 게이트웨이 시작 (127.0.0.1:8001)...
-start "FastAPI Gateway" cmd /k "call .venv\Scripts\activate & uvicorn ai_gateway.main:app --host 127.0.0.1 --port 8001 --reload"
+:: 3. FastAPI Gateway (Port 8001) - 멀티 워커
+echo [2/3] AI 게이트웨이 시작 (127.0.0.1:8001) - 워커 4개...
+start "FastAPI Gateway" cmd /k "call .venv\Scripts\activate & uvicorn ai_gateway.main:app --host 127.0.0.1 --port 8001 --workers 4"
 
 :: 4. React Frontend (Localhost)
 echo [3/3] React 클라이언트 시작...
