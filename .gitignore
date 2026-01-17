@@ -7,3 +7,5 @@ doc/
 *.sqlite3
 *.toml
 *.log
+logs/
+*.pyc

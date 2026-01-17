@@ -4,12 +4,6 @@ This document outlines the performance optimizations made to the Django/FastAPI 
 
 ## Recent Updates (2026-01-17)
 
-### Multi-Worker Deployment
-Configured production-ready multi-worker setup for handling concurrent requests:
-- **FastAPI Gateway**: 4 workers (uvicorn --workers 4)
-- **Django Server**: Development server with --noreload for stability
-- **Capacity**: ~40-80 concurrent requests/sec (vs 1-2 previously)
-
 ### Rate Limiting
 Implemented token-aware rate limiter with automatic retry mechanism:
 - **RPM (Requests Per Minute)**: 100 requests/minute limit

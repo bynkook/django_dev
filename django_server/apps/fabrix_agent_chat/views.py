@@ -1,5 +1,7 @@
 import httpx
+import logging
 from django.conf import settings
+from django.db import transaction
 from django.http import JsonResponse
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
@@ -10,6 +12,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from .models import ChatSession, ChatMessage
 from .serializers import ChatSessionSerializer, ChatSessionDetailSerializer, ChatMessageSerializer
+
+logger = logging.getLogger(__name__)
 
 # [추가] Agent 목록 조회 Proxy View
 class AgentListView(APIView):
@@ -29,45 +33,66 @@ class AgentListView(APIView):
             'x-generative-ai-user-email': fabrix_conf.get('user_email', ''),
         }
         
-        try:
-            # settings에서 공유 HTTP 클라이언트 사용 (연결 재사용)
-            http_client = getattr(settings, 'SHARED_HTTP_CLIENT', None)
-            
-            if http_client is None:
-                # Fallback: 클라이언트가 없으면 새로 생성
-                with httpx.Client(timeout=10.0) as client:
-                    response = client.get(
-                        target_url,
-                        headers=headers,
-                        params={'page': 1, 'limit': 100}
+        # Retry logic for better reliability
+        max_retries = 2
+        retry_count = 0
+        
+        while retry_count <= max_retries:
+            try:
+                # settings에서 공유 HTTP 클라이언트 사용 (연결 재사용)
+                http_client = getattr(settings, 'SHARED_HTTP_CLIENT', None)
+                
+                if http_client is None:
+                    # Fallback: 클라이언트가 없으면 새로 생성
+                    with httpx.Client(timeout=15.0) as client:
+                        response = client.get(
+                            target_url,
+                            headers=headers,
+                            params={'page': 1, 'limit': 100}
+                        )
+                        response.raise_for_status()
+                        return JsonResponse(response.json(), status=response.status_code, safe=False)
+                
+                # 공유 클라이언트 사용
+                response = http_client.get(
+                    target_url,
+                    headers=headers,
+                    params={'page': 1, 'limit': 100}
+                )
+                response.raise_for_status()
+                return JsonResponse(response.json(), status=response.status_code, safe=False)
+                
+            except httpx.TimeoutException:
+                retry_count += 1
+                logger.warning(f"Timeout fetching agents (attempt {retry_count}/{max_retries + 1})")
+                if retry_count > max_retries:
+                    return JsonResponse(
+                        {'error': 'Request timeout to FabriX API after retries'},
+                        status=504
                     )
-                    response.raise_for_status()
-                    return JsonResponse(response.json(), status=response.status_code, safe=False)
-            
-            # 공유 클라이언트 사용
-            response = http_client.get(
-                target_url,
-                headers=headers,
-                params={'page': 1, 'limit': 100}
-            )
-            response.raise_for_status()
-            return JsonResponse(response.json(), status=response.status_code, safe=False)
-            
-        except httpx.TimeoutException:
-            return JsonResponse(
-                {'error': 'Request timeout to FabriX API'},
-                status=504
-            )
-        except httpx.HTTPStatusError as e:
-            return JsonResponse(
-                {'error': str(e)},
-                status=e.response.status_code
-            )
-        except Exception as e:
-            return JsonResponse(
-                {'error': f'Failed to fetch agents: {str(e)}'},
-                status=500
-            )
+                continue
+            except httpx.HTTPStatusError as e:
+                # Don't retry on HTTP errors (4xx, 5xx)
+                logger.error(f"HTTP error fetching agents: {e.response.status_code}")
+                return JsonResponse(
+                    {'error': str(e), 'status_code': e.response.status_code},
+                    status=e.response.status_code
+                )
+            except httpx.ConnectError as e:
+                retry_count += 1
+                logger.warning(f"Connection error fetching agents (attempt {retry_count}/{max_retries + 1}): {e}")
+                if retry_count > max_retries:
+                    return JsonResponse(
+                        {'error': f'Connection failed to FabriX API: {str(e)}'},
+                        status=503
+                    )
+                continue
+            except Exception as e:
+                logger.exception(f"Unexpected error fetching agents: {e}")
+                return JsonResponse(
+                    {'error': f'Failed to fetch agents: {str(e)}'},
+                    status=500
+                )
 
 class SignUpView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -103,13 +128,16 @@ class SignUpView(APIView):
             return Response({'error': 'Email already exists.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            user = User.objects.create_user(username=username, email=email, password=password)
-            user.is_active = True
-            user.save()
+            # Use transaction to ensure atomicity
+            with transaction.atomic():
+                user = User.objects.create_user(username=username, email=email, password=password)
+                user.is_active = True
+                user.save()
 
-            # Create token directly instead of get_or_create since user is new
-            token = Token.objects.create(user=user)
+                # Create token directly instead of get_or_create since user is new
+                token = Token.objects.create(user=user)
             
+            logger.info(f"New user created: {username}")
             return Response({
                 'message': 'Signup successful.',
                 'token': token.key,
@@ -118,6 +146,7 @@ class SignUpView(APIView):
                 'email': user.email
             }, status=status.HTTP_201_CREATED)
         except Exception as e:
+            logger.error(f"Signup failed for {username}: {e}", exc_info=True)
             return Response({'error': f'Signup failed: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class LoginView(APIView):
@@ -177,11 +206,12 @@ class ChatSessionViewSet(viewsets.ModelViewSet):
         return ChatSessionSerializer
 
     @action(detail=True, methods=['post'])
+    @transaction.atomic  # Ensure atomicity for message creation and session update
     def messages(self, request, pk=None):
         session = self.get_object()
         serializer = ChatMessageSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(session=session)
-            session.save() 
+            session.save()  # Update session's updated_at timestamp
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
