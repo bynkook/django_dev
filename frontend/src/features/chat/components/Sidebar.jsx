@@ -101,7 +101,7 @@ const Sidebar = ({ onToggleSidebar }) => {
     <div className="flex flex-col h-full bg-[var(--bg-secondary)] text-[var(--text-primary)] font-sans">
       
       {/* Gemini-style Top Bar: Breadcrumb + Search */}
-      <div className="flex-shrink-0 h-14 flex items-center justify-between px-4 border-b border-[var(--border-color)]">
+      <div className="flex-shrink-0 h-14 flex items-center justify-between px-4">
         {/* Left: Breadcrumb (Menu Icon) */}
         <button
           onClick={onToggleSidebar}
