@@ -1,0 +1,13 @@
+from django.contrib import admin
+from django.urls import path, include
+from django.views.generic import RedirectView # [필수] RedirectView 임포트 확인
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    
+    # [수정] 루트 접속 시 /admin/ 으로 리다이렉트 (404 에러 방지)
+    path('', RedirectView.as_view(url='/admin/')), 
+    
+    # API URLs
+    path('api/', include('apps.fabrix_agent_chat.urls')),
+]
