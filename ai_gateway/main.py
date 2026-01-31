@@ -3,6 +3,7 @@ import json
 import toml
 import httpx
 import logging
+import asyncio
 from pathlib import Path
 from typing import List, Optional
 from contextlib import asynccontextmanager
@@ -13,6 +14,7 @@ from sse_starlette.sse import EventSourceResponse
 from pydantic import BaseModel
 
 from .rate_limiter import rate_limiter
+from .image_processor import process_comparison
 
 # Logging 설정
 logging.basicConfig(level=logging.INFO)
@@ -53,6 +55,9 @@ async def lifespan(app: FastAPI):
 
 # 2. FastAPI 앱 초기화
 app = FastAPI(title="FabriX AI Gateway", lifespan=lifespan)
+
+# 이미지 처리 동시성 제어 (최대 5개 동시 처리)
+image_processing_semaphore = asyncio.Semaphore(5)
 
 # 3. CORS 설정 (React 연동 및 사내망 서비스 모드 지원)
 app.add_middleware(
@@ -291,6 +296,108 @@ async def chat_with_file(
     except Exception as e:
         print(f"File Upload Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/image-compare/process")
+async def compare_images(
+    file1: UploadFile = File(...),
+    file2: UploadFile = File(...),
+    mode: str = Form("difference"),
+    diff_threshold: int = Form(30),
+    feature_count: int = Form(4000),
+    page1: int = Form(0),
+    page2: int = Form(0)
+):
+    """
+    [POST] /image-compare/process
+    두 이미지/PDF를 비교하여 차이점을 시각화합니다.
+    
+    Args:
+        file1: 첫 번째 파일 (이미지 또는 PDF)
+        file2: 두 번째 파일 (이미지 또는 PDF)
+        mode: 비교 모드 ('difference' 또는 'overlay')
+        diff_threshold: 차이 임계값 (0-255)
+        feature_count: ORB 특징점 개수 (1000-10000)
+        page1: PDF 페이지 번호 (0-based)
+        page2: PDF 페이지 번호 (0-based)
+    
+    Returns:
+        {
+            "result_base64": str (JPEG, 화면 표시용),
+            "download_base64": str (PNG, 다운로드용),
+            "metadata": dict
+        }
+    """
+    # 파일 크기 제한 (100MB)
+    MAX_FILE_SIZE = 100 * 1024 * 1024
+    
+    # MIME 타입 검증
+    ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf']
+    
+    if file1.content_type not in ALLOWED_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type for file1: {file1.content_type}. Allowed: {', '.join(ALLOWED_TYPES)}"
+        )
+    
+    if file2.content_type not in ALLOWED_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type for file2: {file2.content_type}. Allowed: {', '.join(ALLOWED_TYPES)}"
+        )
+    
+    # Semaphore로 동시 처리 제한 (최대 5개)
+    async with image_processing_semaphore:
+        try:
+            logger.info(f"Image comparison started: {file1.filename} vs {file2.filename}")
+            
+            # 파일 읽기
+            file1_bytes = await file1.read()
+            file2_bytes = await file2.read()
+            
+            # 크기 검증
+            if len(file1_bytes) > MAX_FILE_SIZE:
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"File1 too large: {len(file1_bytes) / 1024 / 1024:.1f}MB (max 100MB)"
+                )
+            
+            if len(file2_bytes) > MAX_FILE_SIZE:
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"File2 too large: {len(file2_bytes) / 1024 / 1024:.1f}MB (max 100MB)"
+                )
+            
+            # CPU-bound 작업을 별도 스레드에서 실행 (이벤트 루프 블록 방지)
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(
+                None,  # ThreadPoolExecutor 사용 (기본)
+                process_comparison,
+                file1_bytes,
+                file1.content_type,
+                file2_bytes,
+                file2.content_type,
+                mode,
+                diff_threshold,
+                feature_count,
+                page1,
+                page2
+            )
+            
+            logger.info(f"Image comparison completed: {result['metadata']['result_size']}")
+            return result
+        
+        except ValueError as e:
+            # 사용자 입력 오류 (파일 형식, 페이지 번호 등)
+            logger.warning(f"Invalid input: {str(e)}")
+            raise HTTPException(status_code=400, detail=str(e))
+        
+        except Exception as e:
+            # 서버 내부 오류
+            logger.error(f"Image comparison failed: {str(e)}", exc_info=True)
+            raise HTTPException(
+                status_code=500,
+                detail=f"Image processing failed: {str(e)}"
+            )
 
 if __name__ == "__main__":
     import uvicorn

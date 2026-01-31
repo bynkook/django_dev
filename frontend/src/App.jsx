@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './features/auth/LoginPage';
 import MainLayout from './components/layout/MainLayout';
 import ChatPage from './features/chat/ChatPage';
+import ImageComparePage from './features/imageCompare/ImageComparePage';
 
 // --- Route Guard ---
 // 토큰이 없으면 로그인 페이지로 리다이렉트시키는 보호 컴포넌트
@@ -26,6 +27,8 @@ const App = () => {
           <Route path="/" element={<Navigate to="/chat" replace />} />
           {/* 메인 채팅 페이지 */}
           <Route path="/chat" element={<ChatPage />} />
+          {/* 이미지 비교 페이지 */}
+          <Route path="/image-compare" element={<ImageComparePage />} />
         </Route>
 
         {/* 404: 알 수 없는 경로는 로그인 페이지로 리다이렉트 */}

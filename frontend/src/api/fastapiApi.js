@@ -23,4 +23,28 @@ export const fastApi = {
     });
     return response.data;
   },
+
+  // 이미지 비교 요청
+  // params: { file1, file2, mode, diffThreshold, featureCount, page1, page2 }
+  compareImages: async (params) => {
+    const { file1, file2, mode, diffThreshold, featureCount, page1, page2 } = params;
+    
+    const formData = new FormData();
+    formData.append('file1', file1);
+    formData.append('file2', file2);
+    formData.append('mode', mode);
+    formData.append('diff_threshold', diffThreshold);
+    formData.append('feature_count', featureCount);
+    formData.append('page1', page1);
+    formData.append('page2', page2);
+
+    const response = await fastApiClient.post('/image-compare/process', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 60000, // 60초 타임아웃 (대용량 파일 처리)
+    });
+    
+    return response.data;
+  },
 };

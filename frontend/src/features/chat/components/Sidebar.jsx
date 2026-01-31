@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { MessageSquare, Plus, Trash2, MoreHorizontal, UserCircle, Bot, ChevronDown, Check, LogOut, Menu, Search } from 'lucide-react';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { MessageSquare, Plus, Trash2, MoreHorizontal, UserCircle, Bot, ChevronDown, Check, LogOut, Menu, Search, Image as ImageIcon } from 'lucide-react';
 import { chatApi, agentApi } from '../../../api/djangoApi';
 
 const Sidebar = ({ onToggleSidebar }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const currentSessionId = searchParams.get('session_id');
   
@@ -15,6 +16,10 @@ const Sidebar = ({ onToggleSidebar }) => {
   const [agents, setAgents] = useState([]);
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [isAgentMenuOpen, setIsAgentMenuOpen] = useState(false);
+
+  // 현재 페이지 확인
+  const isImageComparePage = location.pathname === '/image-compare';
+  const isChatPage = location.pathname === '/chat';
 
   // Email 정보 가져오기 (없으면 기본값)
   const username = sessionStorage.getItem('username') || 'User';
@@ -119,8 +124,42 @@ const Sidebar = ({ onToggleSidebar }) => {
         >
           <Search size={20} />
         </button>
-      </div>
-
+      </div>Page Navigation */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => navigate('/chat')}
+            className={`
+              flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-medium
+              transition-all duration-200
+              ${isChatPage
+                ? 'bg-blue-50 text-blue-600 border border-blue-200 shadow-sm'
+                : 'text-gray-600 hover:bg-gray-100 border border-transparent'
+              }
+            `}
+          >
+            <MessageSquare size={16} />
+            <span>Chat</span>
+          </button>
+          
+          <button
+            onClick={() => navigate('/image-compare')}
+            className={`
+              flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-medium
+              transition-all duration-200
+              ${isImageComparePage
+                ? 'bg-purple-50 text-purple-600 border border-purple-200 shadow-sm'
+                : 'text-gray-600 hover:bg-gray-100 border border-transparent'
+              }
+            `}
+          >
+            <ImageIcon size={16} />
+            <span>Image</span>
+          </button>
+        </div>
+        
+        {/* [문제 1 해결] Agent Selector - Chat 페이지에서만 표시 */}
+        {isChatPage && (
+  
       {/* Header Area - Agent Selector */}
       <div className="p-4 space-y-3 border-b border-[var(--border-color)]">
         
@@ -138,18 +177,21 @@ const Sidebar = ({ onToggleSidebar }) => {
                 <p className="font-semibold text-sm truncate text-[var(--text-primary)]">
                   {selectedAgent ? selectedAgent.label : 'Select Agent'}
                 </p>
-                <p className="text-xs text-[var(--text-secondary)] truncate">
-                  {selectedAgent ? `ID: ${selectedAgent.agentId.slice(0, 12)}...` : 'Choose your assistant'}
-                </p>
-              </div>
-            </div>
-            <ChevronDown size={16} className={`text-[var(--text-secondary)] shrink-0 transition-transform ${isAgentMenuOpen ? 'rotate-180' : ''}`} />
+                <p className- Chat 페이지에서만 표시 */}
+        {isChatPage && (
+          <button
+            onClick={handleNewChat}
+            className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 font-semibold text-sm group"
+          >
+            <Plus size={20} className="group-hover:rotate-90 transition-transform" />
+            <span>New Chat</span>
           </button>
+        )}
+      </div>
 
-          {/* Dropdown Menu */}
-          {isAgentMenuOpen && (
-            <>
-              <div className="fixed inset-0 z-10" onClick={() => setIsAgentMenuOpen(false)} />
+      {/* Session List - Chat 페이지에서만 표시 */}
+      {isChatPage && (
+                <div className="fixed inset-0 z-10" onClick={() => setIsAgentMenuOpen(false)} />
               <div className="absolute z-20 w-full mt-2 bg-white border border-[var(--border-color)] rounded-xl shadow-xl max-h-80 overflow-y-auto custom-scrollbar">
                 {agents.length > 0 ? agents.map(agent => (
                   <button
@@ -190,7 +232,8 @@ const Sidebar = ({ onToggleSidebar }) => {
       {/* Session List */}
       <div className="flex-1 overflow-y-auto px-3 py-4 custom-scrollbar">
         <div className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-3 px-3">
-          Recent Conversations
+        </div>
+      )}cent Conversations
         </div>
 
         {isLoading && sessions.length === 0 ? (
