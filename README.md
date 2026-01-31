@@ -12,7 +12,6 @@
    - 1.1 프로젝트명
    - 1.2 프로젝트 목표
    - 1.3 프로젝트 범위
-   - 1.4 프로젝트 배경
 
 ### 2. [핵심 개발 원칙](#2-핵심-개발-원칙)
    - 2.1 Production-Ready 개발
@@ -169,34 +168,6 @@ Windows 환경에서 실행되는 사내 FabriX API 기반 LLM 채팅 서비스 
 - ❌ 음성/비디오 입출력
 - ❌ 멀티모달 이미지 생성
 
-### 1.4 프로젝트 배경
-
-#### 개발 동기
-
-기존 외부 LLM 서비스(ChatGPT, Claude 등)는 보안상의 이유로 사내 업무에 활용이 제한적이었습니다. Samsung SDS에서 자체 구축한 FabriX 플랫폼이 제공되었으나, **웹 인터페이스가 없어** 직접적인 활용이 어려운 상황이었습니다.
-
-#### 해결 방안
-
-1. **API 기반 접근**
-   - FabriX OpenAPI 를 활용한 프로그래밍 방식 접근
-   - RESTful API 호출 및 SSE 스트리밍 처리
-
-2. **보안 강화**
-   - API Key를 서버에만 저장 (클라이언트 노출 방지)
-   - FastAPI를 Proxy Gateway로 활용
-   - secrets.toml 을 통한 환경변수 분리
-
-3. **Windows 환경 최적화**
-   - SQLite WAL 모드로 동시성 확보
-   - 단일 워커 모드로 Windows 호환성 확보
-   - 배치 파일 기반 간편 실행
-
-#### 기대 효과
-
-- **업무 효율성 향상**: 코드 작성, 문서 요약, 데이터 분석 등 AI 활용 극대화
-- **보안 준수**: 사내망 내에서만 동작하여 정보 유출 방지
-- **비용 절감**: 외부 유료 서비스 대체
-- **확장성 확보**: 향후 다양한 AI 에이전트 추가 가능
 
 ---
 
@@ -302,21 +273,6 @@ django_server/
 - RESTful API로 Frontend-Backend 통신
 - 버전 관리 용이 (`/api/v1/`, `/api/v2/`)
 
-#### 확장 시나리오 예시
-
-**새로운 AI 서비스 추가 시**
-```bash
-# 1. Django에 새 앱 생성
-python manage.py startapp new_ai_service
-
-# 2. FastAPI에 새 라우터 추가
-ai_gateway/routers/new_service.py
-
-# 3. Frontend에 새 Feature 추가
-frontend/src/features/new_service/
-```
-
-**기존 코드 수정 최소화** - 새 모듈만 추가하면 동작
 
 ---
 
@@ -10050,94 +10006,7 @@ http://192.168.1.100:5173
 
 ---
 
-### 13.5 Windows 서비스 등록
-
-#### NSSM (Non-Sucking Service Manager) 사용
-
-**1. NSSM 다운로드**
-```
-https://nssm.cc/download
-→ nssm-2.24.zip 다운로드
-→ 압축 해제: C:\nssm\
-```
-
-**2. Django 서비스 등록**
-```powershell
-# 관리자 권한 PowerShell
-cd C:\nssm\win64
-
-# 서비스 생성
-.\nssm.exe install FabriXDjango
-
-# GUI 설정 창 표시:
-# Path: C:\Users\YourName\django_dev\venv\Scripts\python.exe
-# Startup directory: C:\Users\YourName\django_dev\django_server
-# Arguments: manage.py runserver 0.0.0.0:8000
-```
-
-**3. FastAPI 서비스 등록**
-```powershell
-.\nssm.exe install FabriXFastAPI
-
-# GUI 설정:
-# Path: C:\Users\YourName\django_dev\venv\Scripts\python.exe
-# Startup directory: C:\Users\YourName\django_dev\ai_gateway
-# Arguments: -m uvicorn main:app --host 0.0.0.0 --port 8001
-```
-
-**4. 서비스 시작**
-```powershell
-# 서비스 시작
-Start-Service FabriXDjango
-Start-Service FabriXFastAPI
-
-# 상태 확인
-Get-Service FabriX*
-
-# 출력:
-# Status   Name               DisplayName
-# ------   ----               -----------
-# Running  FabriXDjango       FabriXDjango
-# Running  FabriXFastAPI      FabriXFastAPI
-```
-
-**5. 자동 시작 설정**
-```powershell
-# 시스템 부팅 시 자동 시작
-Set-Service FabriXDjango -StartupType Automatic
-Set-Service FabriXFastAPI -StartupType Automatic
-```
-
-**6. 서비스 제거**
-```powershell
-# 서비스 중지
-Stop-Service FabriXDjango
-Stop-Service FabriXFastAPI
-
-# 서비스 제거
-C:\nssm\win64\nssm.exe remove FabriXDjango confirm
-C:\nssm\win64\nssm.exe remove FabriXFastAPI confirm
-```
-
-#### 서비스 로그 설정
-
-**NSSM 로그 설정**
-```powershell
-# Django 로그
-C:\nssm\win64\nssm.exe set FabriXDjango AppStdout C:\Users\YourName\django_dev\logs\django_stdout.log
-C:\nssm\win64\nssm.exe set FabriXDjango AppStderr C:\Users\YourName\django_dev\logs\django_stderr.log
-
-# FastAPI 로그
-C:\nssm\win64\nssm.exe set FabriXFastAPI AppStdout C:\Users\YourName\django_dev\logs\fastapi_stdout.log
-C:\nssm\win64\nssm.exe set FabriXFastAPI AppStderr C:\Users\YourName\django_dev\logs\fastapi_stderr.log
-
-# 로그 디렉토리 생성
-mkdir C:\Users\YourName\django_dev\logs
-```
-
----
-
-### 13.6 프론트엔드 배포 옵션
+### 13.5 프론트엔드 배포 옵션
 
 #### 옵션 1: 개발 서버 (사내망용)
 
@@ -10202,20 +10071,10 @@ serve -s dist -l 5173 --host 0.0.0.0
 # - Network:  http://192.168.x.x:5173
 ```
 
-**Windows 서비스로 등록**
-```powershell
-# NSSM으로 서비스 생성
-C:\nssm\win64\nssm.exe install FabriXFrontend
-
-# 설정:
-# Path: C:\Program Files\nodejs\node.exe
-# Startup directory: C:\Users\YourName\django_dev\frontend
-# Arguments: C:\Users\YourName\AppData\Roaming\npm\node_modules\serve\build\main.js -s dist -l 5173 --host 0.0.0.0
-```
 
 ---
 
-### 13.7 배포 체크리스트
+### 13.6 배포 체크리스트
 
 #### 보안 체크
 
