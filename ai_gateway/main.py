@@ -305,7 +305,8 @@ async def compare_images(
     diff_threshold: int = Form(30),
     feature_count: int = Form(4000),
     page1: int = Form(0),
-    page2: int = Form(0)
+    page2: int = Form(0),
+    bin_threshold: int = Form(200)
 ):
     """
     [POST] /image-compare/process
@@ -319,6 +320,7 @@ async def compare_images(
         feature_count: ORB 특징점 개수 (1000-10000)
         page1: PDF 페이지 번호 (0-based)
         page2: PDF 페이지 번호 (0-based)
+        bin_threshold: 이진화 임계값 (0-255)
     
     Returns:
         {
@@ -327,8 +329,8 @@ async def compare_images(
             "metadata": dict
         }
     """
-    # 파일 크기 제한 (100MB)
-    MAX_FILE_SIZE = 100 * 1024 * 1024
+    # 파일 크기 제한 (30MB)
+    MAX_FILE_SIZE = 30 * 1024 * 1024
     
     # MIME 타입 검증
     ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf']
@@ -358,13 +360,13 @@ async def compare_images(
             if len(file1_bytes) > MAX_FILE_SIZE:
                 raise HTTPException(
                     status_code=413,
-                    detail=f"File1 too large: {len(file1_bytes) / 1024 / 1024:.1f}MB (max 100MB)"
+                    detail=f"File1 too large: {len(file1_bytes) / 1024 / 1024:.1f}MB (max 30MB)"
                 )
             
             if len(file2_bytes) > MAX_FILE_SIZE:
                 raise HTTPException(
                     status_code=413,
-                    detail=f"File2 too large: {len(file2_bytes) / 1024 / 1024:.1f}MB (max 100MB)"
+                    detail=f"File2 too large: {len(file2_bytes) / 1024 / 1024:.1f}MB (max 30MB)"
                 )
             
             # CPU-bound 작업을 별도 스레드에서 실행 (이벤트 루프 블록 방지)
@@ -380,7 +382,8 @@ async def compare_images(
                 diff_threshold,
                 feature_count,
                 page1,
-                page2
+                page2,
+                bin_threshold
             )
             
             logger.info(f"Image comparison completed: {result['metadata']['result_size']}")

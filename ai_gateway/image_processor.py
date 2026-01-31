@@ -15,14 +15,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def pdf_to_image(pdf_bytes: bytes, page_num: int = 0, dpi: int = 300) -> Tuple[np.ndarray, int]:
+def pdf_to_image(pdf_bytes: bytes, page_num: int = 0, dpi: int = 150) -> Tuple[np.ndarray, int]:
     """
     PDF를 이미지로 변환
     
     Args:
         pdf_bytes: PDF 파일의 바이트 데이터
         page_num: 변환할 페이지 번호 (0-based)
-        dpi: 해상도 (기본 300)
+        dpi: 해상도 (기본 150)
     
     Returns:
         (이미지 BGR 배열, 전체 페이지 수)
@@ -196,7 +196,7 @@ def fallback_align(A_bgr: np.ndarray, B_bgr: np.ndarray) -> np.ndarray:
     return canvas
 
 
-def compare_images(A_bgr: np.ndarray, B_aligned_bgr: np.ndarray, diff_thresh: int = 30) -> np.ndarray:
+def compare_images(A_bgr: np.ndarray, B_aligned_bgr: np.ndarray, diff_thresh: int = 30, bin_thresh: int = 200) -> np.ndarray:
     """
     두 이미지 비교 (차이점 강조)
     
@@ -209,6 +209,7 @@ def compare_images(A_bgr: np.ndarray, B_aligned_bgr: np.ndarray, diff_thresh: in
         A_bgr: 첫 번째 이미지
         B_aligned_bgr: 정렬된 두 번째 이미지
         diff_thresh: 차이 임계값
+        bin_thresh: 이진화 임계값 (기본 200)
     
     Returns:
         비교 결과 이미지
@@ -218,8 +219,8 @@ def compare_images(A_bgr: np.ndarray, B_aligned_bgr: np.ndarray, diff_thresh: in
     A_gray = cv2.cvtColor(A_bgr, cv2.COLOR_BGR2GRAY)
     B_gray = cv2.cvtColor(B_aligned_bgr, cv2.COLOR_BGR2GRAY)
     
-    _, A_bin = cv2.threshold(A_gray, 200, 255, cv2.THRESH_BINARY_INV)
-    _, B_bin = cv2.threshold(B_gray, 200, 255, cv2.THRESH_BINARY_INV)
+    _, A_bin = cv2.threshold(A_gray, bin_thresh, 255, cv2.THRESH_BINARY_INV)
+    _, B_bin = cv2.threshold(B_gray, bin_thresh, 255, cv2.THRESH_BINARY_INV)
     
     diff = cv2.absdiff(A_gray, B_gray)
     _, diff_mask = cv2.threshold(diff, diff_thresh, 255, cv2.THRESH_BINARY)
@@ -244,7 +245,7 @@ def compare_images(A_bgr: np.ndarray, B_aligned_bgr: np.ndarray, diff_thresh: in
     return result
 
 
-def compare_images_overlay(A_bgr: np.ndarray, B_aligned_bgr: np.ndarray) -> np.ndarray:
+def compare_images_overlay(A_bgr: np.ndarray, B_aligned_bgr: np.ndarray, bin_thresh: int = 200) -> np.ndarray:
     """
     두 이미지 오버레이 (겹치기)
     
@@ -254,6 +255,7 @@ def compare_images_overlay(A_bgr: np.ndarray, B_aligned_bgr: np.ndarray) -> np.n
     Args:
         A_bgr: 첫 번째 이미지
         B_aligned_bgr: 정렬된 두 번째 이미지
+        bin_thresh: 이진화 임계값 (기본 200)
     
     Returns:
         오버레이 결과 이미지
@@ -263,8 +265,8 @@ def compare_images_overlay(A_bgr: np.ndarray, B_aligned_bgr: np.ndarray) -> np.n
     A_gray = cv2.cvtColor(A_bgr, cv2.COLOR_BGR2GRAY)
     B_gray = cv2.cvtColor(B_aligned_bgr, cv2.COLOR_BGR2GRAY)
     
-    _, A_bin = cv2.threshold(A_gray, 200, 255, cv2.THRESH_BINARY_INV)
-    _, B_bin = cv2.threshold(B_gray, 200, 255, cv2.THRESH_BINARY_INV)
+    _, A_bin = cv2.threshold(A_gray, bin_thresh, 255, cv2.THRESH_BINARY_INV)
+    _, B_bin = cv2.threshold(B_gray, bin_thresh, 255, cv2.THRESH_BINARY_INV)
     
     result = np.full((h, w, 3), 255, dtype=np.uint8)
     
@@ -301,7 +303,7 @@ def encode_image_to_base64(img: np.ndarray, format: str = 'JPEG', quality: int =
     return f"data:{mime_type};base64,{base64_str}"
 
 
-def generate_highlighted_images(A_bgr: np.ndarray, B_aligned_bgr: np.ndarray, diff_thresh: int = 30) -> Tuple[np.ndarray, np.ndarray]:
+def generate_highlighted_images(A_bgr: np.ndarray, B_aligned_bgr: np.ndarray, diff_thresh: int = 30, bin_thresh: int = 200) -> Tuple[np.ndarray, np.ndarray]:
     """
     각 이미지에 차이점 강조 (Side-by-Side 뷰용)
     A에는 A만의 특징(삭제됨)을, B에는 B만의 특징(추가됨)을 강조
@@ -311,8 +313,8 @@ def generate_highlighted_images(A_bgr: np.ndarray, B_aligned_bgr: np.ndarray, di
     A_gray = cv2.cvtColor(A_bgr, cv2.COLOR_BGR2GRAY)
     B_gray = cv2.cvtColor(B_aligned_bgr, cv2.COLOR_BGR2GRAY)
     
-    _, A_bin = cv2.threshold(A_gray, 200, 255, cv2.THRESH_BINARY_INV)
-    _, B_bin = cv2.threshold(B_gray, 200, 255, cv2.THRESH_BINARY_INV)
+    _, A_bin = cv2.threshold(A_gray, bin_thresh, 255, cv2.THRESH_BINARY_INV)
+    _, B_bin = cv2.threshold(B_gray, bin_thresh, 255, cv2.THRESH_BINARY_INV)
     
     diff = cv2.absdiff(A_gray, B_gray)
     _, diff_mask = cv2.threshold(diff, diff_thresh, 255, cv2.THRESH_BINARY)
@@ -354,7 +356,8 @@ def process_comparison(
     diff_threshold: int = 30,
     feature_count: int = 4000,
     page1: int = 0,
-    page2: int = 0
+    page2: int = 0,
+    bin_threshold: int = 200
 ) -> dict:
     """
     이미지 비교 전체 파이프라인
@@ -369,6 +372,7 @@ def process_comparison(
         feature_count: ORB 특징점 개수
         page1: PDF 페이지 번호 (file1)
         page2: PDF 페이지 번호 (file2)
+        bin_threshold: 이진화 임계값 (기본 200)
     
     Returns:
         {
@@ -393,10 +397,12 @@ def process_comparison(
         logger.info("이미지 정렬 중...")
         _, aligned_img2, H, quality = align_images(img1, img2, nfeatures=feature_count)
         
+        alignment_failed = False
         # 폴백: 정렬 실패 시
         if aligned_img2 is None or quality < 0.3:
             logger.warning("ORB 정렬 실패, 폴백 정렬 사용")
             aligned_img2 = fallback_align(img1, img2)
+            alignment_failed = True
         
         # 4. 비교
         logger.info(f"비교 모드: {mode}")
@@ -405,12 +411,12 @@ def process_comparison(
         file2_result = aligned_img2
 
         if mode == "overlay":
-            result = compare_images_overlay(img1, aligned_img2)
+            result = compare_images_overlay(img1, aligned_img2, bin_thresh=bin_threshold)
             # Overlay 모드에서는 원본(정렬된) 그냥 반환
         else:  # difference
-            result = compare_images(img1, aligned_img2, diff_thresh=diff_threshold)
+            result = compare_images(img1, aligned_img2, diff_thresh=diff_threshold, bin_thresh=bin_threshold)
             # Difference 모드에서는 하이라이트된 개별 이미지 생성
-            file1_result, file2_result = generate_highlighted_images(img1, aligned_img2, diff_thresh=diff_threshold)
+            file1_result, file2_result = generate_highlighted_images(img1, aligned_img2, diff_thresh=diff_threshold, bin_thresh=bin_threshold)
         
         # 5. 인코딩
         logger.info("이미지 인코딩 중...")
@@ -430,6 +436,7 @@ def process_comparison(
                 "file1_pages": pages1,
                 "file2_pages": pages2,
                 "match_quality": quality,
+                "alignment_failed": alignment_failed,
                 "result_size": f"{result.shape[1]}x{result.shape[0]}"
             }
         }
