@@ -14,6 +14,12 @@ export const authApi = {
     const response = await djangoClient.post('/api/auth/login/', credentials);
     return response.data;
   },
+  
+  // 로그아웃
+  logout: async () => {
+    const response = await djangoClient.post('/api/auth/logout/');
+    return response.data;
+  },
 };
 
 // [추가] Agent 목록 조회 API

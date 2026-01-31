@@ -55,7 +55,7 @@ const InputBox = ({ onSend, isLoading, onStop }) => {
       )}
 
       {/* Main Input Container */}
-      <div className="relative flex items-end gap-2 bg-white border border-[var(--border-color)] rounded-3xl p-2 shadow-lg hover:shadow-xl focus-within:shadow-xl focus-within:border-blue-300 transition-all duration-300">
+      <div className="relative flex items-end gap-2 bg-white border border-[var(--border-color)] rounded-3xl p-2 shadow-lg hover:shadow-xl focus-within:shadow-xl focus-within:border-blue-300 transition-all duration-300 w-full">
        
         {/* File Button */}
         <button
@@ -76,7 +76,7 @@ const InputBox = ({ onSend, isLoading, onStop }) => {
           onKeyDown={handleKeyDown}
           placeholder="Message FabriX Agent..."
           rows={1}
-          className="flex-1 bg-transparent text-[var(--text-primary)] resize-none outline-none py-3.5 max-h-[200px] custom-scrollbar placeholder:text-gray-400 leading-relaxed"
+          className="flex-1 max-w-full min-w-0 bg-transparent text-[var(--text-primary)] resize-none outline-none py-3.5 max-h-[200px] custom-scrollbar placeholder:text-gray-400 leading-relaxed"
           disabled={isLoading && !onStop}
         />
 

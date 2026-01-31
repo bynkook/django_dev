@@ -13,7 +13,7 @@ export default defineConfig({
   server: {
     // 사내망 배포(Service Mode)를 위해 0.0.0.0 개방
     host: '0.0.0.0',
-    port: 3000,
+    port: 5173,  // 통일된 포트 번호
     
     // [추가됨] 서버 시작 시 브라우저 자동 실행
     open: true, 

@@ -57,7 +57,14 @@ const LoginPage = () => {
         const emailToSave = data.email || formData.email || 'user@example.com';
         sessionStorage.setItem('email', emailToSave);
         
-        navigate('/chat');
+        // returnTo가 있으면 해당 경로로, 없으면 앱 선택 페이지로
+        const returnTo = sessionStorage.getItem('returnTo');
+        if (returnTo && (returnTo === '/chat' || returnTo === '/image-compare')) {
+          sessionStorage.removeItem('returnTo');
+          navigate(returnTo);
+        } else {
+          navigate('/');
+        }
       }
     } catch (err) {
       console.error(err);

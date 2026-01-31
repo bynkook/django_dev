@@ -301,6 +301,50 @@ def encode_image_to_base64(img: np.ndarray, format: str = 'JPEG', quality: int =
     return f"data:{mime_type};base64,{base64_str}"
 
 
+def generate_highlighted_images(A_bgr: np.ndarray, B_aligned_bgr: np.ndarray, diff_thresh: int = 30) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    각 이미지에 차이점 강조 (Side-by-Side 뷰용)
+    A에는 A만의 특징(삭제됨)을, B에는 B만의 특징(추가됨)을 강조
+    """
+    h, w = A_bgr.shape[:2]
+    
+    A_gray = cv2.cvtColor(A_bgr, cv2.COLOR_BGR2GRAY)
+    B_gray = cv2.cvtColor(B_aligned_bgr, cv2.COLOR_BGR2GRAY)
+    
+    _, A_bin = cv2.threshold(A_gray, 200, 255, cv2.THRESH_BINARY_INV)
+    _, B_bin = cv2.threshold(B_gray, 200, 255, cv2.THRESH_BINARY_INV)
+    
+    diff = cv2.absdiff(A_gray, B_gray)
+    _, diff_mask = cv2.threshold(diff, diff_thresh, 255, cv2.THRESH_BINARY)
+    
+    # Masks
+    only_A = np.logical_and(A_bin > 0, B_bin == 0).astype(np.uint8) * 255
+    only_B = np.logical_and(B_bin > 0, A_bin == 0).astype(np.uint8) * 255
+    both = np.logical_and(A_bin > 0, B_bin > 0).astype(np.uint8) * 255
+    
+    # 엣지 노이즈 보정 (Common diff)
+    diff_common = np.logical_and(diff_mask > 0, both > 0)
+    darker_in_A = np.logical_and(diff_common, A_gray < B_gray)
+    darker_in_B = np.logical_and(diff_common, B_gray < A_gray)
+    
+    only_A = np.logical_or(only_A > 0, darker_in_A)
+    only_B = np.logical_or(only_B > 0, darker_in_B)
+
+    # Image A Highlighted (Blue for missing/changed)
+    # 원본 이미지를 흐리게 하고 차이 부분만 강조
+    imgA_out = A_bgr.copy()
+    # 배경 흐리게
+    # imgA_out = cv2.addWeighted(imgA_out, 0.7, np.full_like(imgA_out, 255), 0.3, 0)
+    # 강조 (Blue)
+    imgA_out[only_A] = [255, 0, 0] # Blue
+    
+    # Image B Highlighted (Red for added/changed)
+    imgB_out = B_aligned_bgr.copy()
+    # imgB_out = cv2.addWeighted(imgB_out, 0.7, np.full_like(imgB_out, 255), 0.3, 0)
+    imgB_out[only_B] = [0, 0, 255] # Red
+    
+    return imgA_out, imgB_out
+
 def process_comparison(
     file1_bytes: bytes,
     file1_type: str,
@@ -329,6 +373,8 @@ def process_comparison(
     Returns:
         {
             "result_base64": str (JPEG 압축, 화면 표시용),
+            "file1_base64": str,
+            "file2_base64": str,
             "download_base64": str (PNG 고품질, 다운로드용),
             "metadata": dict
         }
@@ -354,18 +400,30 @@ def process_comparison(
         
         # 4. 비교
         logger.info(f"비교 모드: {mode}")
+        
+        file1_result = img1
+        file2_result = aligned_img2
+
         if mode == "overlay":
             result = compare_images_overlay(img1, aligned_img2)
+            # Overlay 모드에서는 원본(정렬된) 그냥 반환
         else:  # difference
             result = compare_images(img1, aligned_img2, diff_thresh=diff_threshold)
+            # Difference 모드에서는 하이라이트된 개별 이미지 생성
+            file1_result, file2_result = generate_highlighted_images(img1, aligned_img2, diff_thresh=diff_threshold)
         
         # 5. 인코딩
         logger.info("이미지 인코딩 중...")
         result_base64 = encode_image_to_base64(result, format='JPEG', quality=85)
+        file1_base64 = encode_image_to_base64(file1_result, format='JPEG', quality=85)
+        file2_base64 = encode_image_to_base64(file2_result, format='JPEG', quality=85)
+        
         download_base64 = encode_image_to_base64(result, format='PNG')
         
         return {
             "result_base64": result_base64,
+            "file1_base64": file1_base64,
+            "file2_base64": file2_base64,
             "download_base64": download_base64,
             "metadata": {
                 "mode": mode,

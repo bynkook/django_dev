@@ -1,197 +1,103 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { MessageSquare, Plus, Trash2, MoreHorizontal, UserCircle, Bot, ChevronDown, Check, LogOut, Menu, Search, Image as ImageIcon } from 'lucide-react';
-import { chatApi, agentApi } from '../../../api/djangoApi';
+import React, { useState } from 'react';
+import { 
+  MessageSquare, 
+  Trash2, 
+  Plus, 
+  Bot, 
+  ChevronDown, 
+  Check, 
+  LogOut
+} from 'lucide-react';
 
-const Sidebar = ({ onToggleSidebar }) => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [searchParams] = useSearchParams();
-  const currentSessionId = searchParams.get('session_id');
-  
-  const [sessions, setSessions] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  
-  // Agent 상태 관리
-  const [agents, setAgents] = useState([]);
-  const [selectedAgent, setSelectedAgent] = useState(null);
+const Sidebar = ({ 
+  sessions = [], 
+  currentSessionId, 
+  onSelectSession,
+  onNewChat, 
+  isLoading,
+  onDeleteSession,
+  selectedAgent = null,
+  agents = [],
+  onAgentSelect,
+  username = 'User',
+  userEmail = '',
+  onLogout
+}) => {
   const [isAgentMenuOpen, setIsAgentMenuOpen] = useState(false);
 
-  // 현재 페이지 확인
-  const isImageComparePage = location.pathname === '/image-compare';
-  const isChatPage = location.pathname === '/chat';
-
-  // Email 정보 가져오기 (없으면 기본값)
-  const username = sessionStorage.getItem('username') || 'User';
-  const userEmail = sessionStorage.getItem('email') || 'user@example.com';
-
-  const loadSessions = async () => {
-    try {
-      setIsLoading(true);
-      const data = await chatApi.getSessions();
-      setSessions(data);
-    } catch (error) {
-      console.error("Failed to load sessions:", error);
-    } finally {
-      setIsLoading(false);
+  const handleSelectSession = (sessionId) => {
+    if (onSelectSession) {
+      onSelectSession(sessionId);
     }
   };
 
-  // Agent 목록 로드 함수
-  const loadAgents = async () => {
-    try {
-      const data = await agentApi.getAgents();
-      // API 응답 구조: { items: [...] }
-      const items = data.items || [];
-      setAgents(items);
-      // 기본값 선택
-      if (items.length > 0 && !selectedAgent) {
-        setSelectedAgent(items[0]);
-        // ChatPage에 선택된 Agent 전달 (agent 객체도 함께)
-        window.dispatchEvent(new CustomEvent('agent-selected', { 
-          detail: { 
-            agentId: items[0].agentId,
-            agent: items[0]
-          } 
-        }));
-      }
-    } catch (error) {
-      console.error("Failed to load agents:", error);
+  const handleNewChat = () => {
+    if (onNewChat) {
+      onNewChat();
     }
   };
 
-  // Agent 선택 핸들러
-  const handleAgentSelect = (agent) => {
-    setSelectedAgent(agent);
-    setIsAgentMenuOpen(false);
-    // ChatPage에 선택 이벤트 전달 (agent 객체도 함께)
-    window.dispatchEvent(new CustomEvent('agent-selected', { 
-      detail: { 
-        agentId: agent.agentId,
-        agent: agent
-      } 
-    }));
-  };
-
-  useEffect(() => {
-    loadSessions();
-    loadAgents(); // Agent 로드 호출
-    window.addEventListener('session-created', loadSessions);
-    return () => window.removeEventListener('session-created', loadSessions);
-  }, [currentSessionId]);
-
-  const handleNewChat = () => navigate('/chat');
-  const handleSelectSession = (id) => navigate(`/chat?session_id=${id}`);
- 
-  const handleDeleteSession = async (e, id) => {
+  const handleDeleteSession = (e, sessionId) => {
     e.stopPropagation();
-    if (window.confirm('Delete this chat?')) {
-      try {
-        await chatApi.deleteSession(id);
-        setSessions(prev => prev.filter(s => s.id !== id));
-        if (String(currentSessionId) === String(id)) navigate('/chat');
-      } catch (error) { alert('Delete failed'); }
+    if (window.confirm("Are you sure you want to delete this conversation?")) {
+      if (onDeleteSession) {
+        onDeleteSession(sessionId);
+      }
     }
   };
 
-  // 로그아웃 핸들러
+  const handleAgentSelect = (agent) => {
+    if (onAgentSelect) {
+      onAgentSelect(agent);
+    }
+    setIsAgentMenuOpen(false);
+  };
+
   const handleLogout = () => {
-    if (window.confirm('Are you sure you want to logout?')) {
-      sessionStorage.clear(); // 세션 만료
-      navigate('/login'); // 로그인 페이지로 이동
+    if (onLogout) {
+      onLogout();
     }
   };
 
   return (
-    <div className="flex flex-col h-full bg-[var(--bg-secondary)] text-[var(--text-primary)] font-sans">
-      
-      {/* Gemini-style Top Bar: Breadcrumb + Search */}
-      <div className="flex-shrink-0 h-14 flex items-center justify-between px-4">
-        {/* Left: Breadcrumb (Menu Icon) */}
-        <button
-          onClick={onToggleSidebar}
-          className="p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-all duration-200"
-          title="Close Sidebar"
-        >
-          <Menu size={20} />
-        </button>
-        
-        {/* Right: Search Icon */}
-        <button
-          onClick={() => {/* TODO: Search functionality */}}
-          className="p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-all duration-200"
-          title="Search conversations"
-        >
-          <Search size={20} />
-        </button>
-      </div>Page Navigation */}
-        <div className="flex gap-2">
-          <button
-            onClick={() => navigate('/chat')}
-            className={`
-              flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-medium
-              transition-all duration-200
-              ${isChatPage
-                ? 'bg-blue-50 text-blue-600 border border-blue-200 shadow-sm'
-                : 'text-gray-600 hover:bg-gray-100 border border-transparent'
-              }
-            `}
-          >
-            <MessageSquare size={16} />
-            <span>Chat</span>
-          </button>
-          
-          <button
-            onClick={() => navigate('/image-compare')}
-            className={`
-              flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-medium
-              transition-all duration-200
-              ${isImageComparePage
-                ? 'bg-purple-50 text-purple-600 border border-purple-200 shadow-sm'
-                : 'text-gray-600 hover:bg-gray-100 border border-transparent'
-              }
-            `}
-          >
-            <ImageIcon size={16} />
-            <span>Image</span>
-          </button>
+    <div className="w-full h-full bg-[var(--bg-secondary)] flex flex-col">
+      {/* Header Area */}
+      <div className="p-4">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+            <Bot className="text-white" size={20} />
+          </div>
+          <h1 className="text-xl font-bold text-[var(--text-primary)]">Fabrix Agent Chat</h1>
         </div>
-        
-        {/* [문제 1 해결] Agent Selector - Chat 페이지에서만 표시 */}
-        {isChatPage && (
-  
-      {/* Header Area - Agent Selector */}
-      <div className="p-4 space-y-3 border-b border-[var(--border-color)]">
-        
-        {/* [문제 1 해결] Agent Selector */}
-        <div className="relative">
-          <button 
+
+        {/* Agent Selector */}
+        <div className="relative mb-4">
+          <button
             onClick={() => setIsAgentMenuOpen(!isAgentMenuOpen)}
-            className="w-full flex items-center justify-between px-4 py-3 bg-white border border-[var(--border-color)] rounded-xl shadow-sm hover:border-blue-400 hover:shadow-md transition-all text-left group"
+            className="flex items-center justify-between gap-3 w-full px-4 py-3 bg-white border border-[var(--border-color)] rounded-xl hover:border-blue-300 hover:shadow-md transition-all text-left group"
           >
-            <div className="flex items-center gap-3 overflow-hidden">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
               <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg shrink-0">
                 <Bot size={18} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm truncate text-[var(--text-primary)]">
-                  {selectedAgent ? selectedAgent.label : 'Select Agent'}
+                <p className="text-xs text-[var(--text-secondary)] font-medium mb-0.5">
+                  Select Agent
                 </p>
-                <p className- Chat 페이지에서만 표시 */}
-        {isChatPage && (
-          <button
-            onClick={handleNewChat}
-            className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 font-semibold text-sm group"
-          >
-            <Plus size={20} className="group-hover:rotate-90 transition-transform" />
-            <span>New Chat</span>
+                <p className="font-semibold text-sm truncate text-[var(--text-primary)]">
+                  {selectedAgent ? (selectedAgent.label.length > 20 ? selectedAgent.label.slice(0, 20) + '...' : selectedAgent.label) : 'Choose an AI agent'}
+                </p>
+              </div>
+            </div>
+            <ChevronDown 
+              size={16} 
+              className={`text-[var(--text-secondary)] group-hover:text-blue-500 transition-transform ${isAgentMenuOpen ? 'rotate-180' : ''}`} 
+            />
           </button>
-        )}
-      </div>
 
-      {/* Session List - Chat 페이지에서만 표시 */}
-      {isChatPage && (
-                <div className="fixed inset-0 z-10" onClick={() => setIsAgentMenuOpen(false)} />
+          {isAgentMenuOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setIsAgentMenuOpen(false)} />
               <div className="absolute z-20 w-full mt-2 bg-white border border-[var(--border-color)] rounded-xl shadow-xl max-h-80 overflow-y-auto custom-scrollbar">
                 {agents.length > 0 ? agents.map(agent => (
                   <button
@@ -232,8 +138,7 @@ const Sidebar = ({ onToggleSidebar }) => {
       {/* Session List */}
       <div className="flex-1 overflow-y-auto px-3 py-4 custom-scrollbar">
         <div className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-3 px-3">
-        </div>
-      )}cent Conversations
+          Recent Conversations
         </div>
 
         {isLoading && sessions.length === 0 ? (
@@ -273,7 +178,7 @@ const Sidebar = ({ onToggleSidebar }) => {
       </div>
 
       {/* Footer: User Profile + Logout */}
-      <div className="p-4 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
+      <div className="p-4 bg-[var(--bg-secondary)]">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md shrink-0">

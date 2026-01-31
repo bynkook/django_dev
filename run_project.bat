@@ -29,6 +29,13 @@ start "React Frontend" cmd /k "npm run dev"
 
 echo.
 echo   모든 서비스가 시작되었습니다.
-echo   브라우저가 자동으로 열리지 않으면 http://localhost:5173 (또는 3000)으로 접속하세요.
+echo   - Django Backend: http://127.0.0.1:8000
+echo   - FastAPI Gateway: http://127.0.0.1:8001
+echo   - Frontend (Chat + Image Inspector): http://localhost:5173
+echo.
+echo   접속 주소:
+echo   * Chat 앱: http://localhost:5173/chat
+echo   * Image Inspector 앱: http://localhost:5173/image-compare
+echo   * 통합 로그인: http://localhost:5173/login
 echo ========================================================
 pause

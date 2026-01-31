@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, logout as auth_logout
 from .models import ChatSession, ChatMessage
 from .serializers import ChatSessionSerializer, ChatSessionDetailSerializer, ChatMessageSerializer
 
@@ -156,6 +156,11 @@ class LoginView(APIView):
         username = request.data.get('username')
         password = request.data.get('password')
         
+        print(f"\n{'='*60}")
+        print(f"[Login Request] Username: '{username}'")
+        print(f"[Login Request] Password length: {len(password) if password else 0}")
+        print(f"[Login Request] Session key: {request.session.session_key}")
+        
         # 입력값 검증
         if not username or not password:
             return Response(
@@ -163,24 +168,68 @@ class LoginView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        # 디버그: 사용자 존재 여부 확인
+        try:
+            user_exists = User.objects.filter(username=username).exists()
+            print(f"[Login Debug] Username '{username}' exists: {user_exists}")
+            if user_exists:
+                user_obj = User.objects.get(username=username)
+                print(f"[Login Debug] User details - Active: {user_obj.is_active}, Staff: {user_obj.is_staff}, Superuser: {user_obj.is_superuser}")
+                print(f"[Login Debug] User has_usable_password: {user_obj.has_usable_password()}")
+                has_token = Token.objects.filter(user=user_obj).exists()
+                print(f"[Login Debug] User has token: {has_token}")
+                if has_token:
+                    existing_token = Token.objects.get(user=user_obj)
+                    print(f"[Login Debug] Existing token: {existing_token.key[:10]}...")
+        except Exception as e:
+            print(f"[Login Debug] Error checking user: {e}")
+        
         user = authenticate(username=username, password=password)
+        print(f"[Login Debug] Authentication result: {user is not None}")
+        
         if user:
             # 계정 활성화 상태 확인
             if not user.is_active:
+                print(f"[Login Debug] User '{username}' is not active")
                 return Response(
                     {'error': 'Account is disabled.'}, 
                     status=status.HTTP_403_FORBIDDEN
                 )
             
-            login(request, user)
-            token, _ = Token.objects.get_or_create(user=user)
+            # Token 인증 사용 (세션 로그인 불필요)
+            token, created = Token.objects.get_or_create(user=user)
+            print(f"[Login Debug] Token {'created' if created else 'retrieved'} for user '{username}'")
+            print(f"[Login Debug] Token key: {token.key[:10]}...")
+            print(f"[Login Success] User '{username}' logged in successfully")
+            print(f"{'='*60}\n")
+            
             return Response({
                 'token': token.key,
                 'user_id': user.pk,
                 'username': user.username,
                 'email': user.email
             })
+        
+        print(f"[Login Failed] Authentication failed for username '{username}'")
+        print(f"{'='*60}\n")
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+class LogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        try:
+            # Token 삭제 (선택적: Token을 재사용하려면 삭제하지 않음)
+            # request.user.auth_token.delete()
+            
+            # Django 세션 로그아웃 (세션이 있는 경우)
+            auth_logout(request)
+            
+            print(f"[Logout Debug] User '{request.user.username}' logged out successfully")
+            return Response({'message': 'Logged out successfully'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(f"[Logout Debug] Error during logout: {e}")
+            return Response({'error': 'Logout failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class ChatSessionViewSet(viewsets.ModelViewSet):
     serializer_class = ChatSessionSerializer
