@@ -35,12 +35,7 @@ const ResultViewer = ({ resultData, onDownload }) => {
         
         {isDiffMode && (
            <div className="flex items-center gap-4 text-xs font-medium">
-             <div className="flex items-center gap-1">
-               <span className="w-3 h-3 rounded-full bg-blue-500"></span>               
-             </div>
-             <div className="flex items-center gap-1">
-               <span className="w-3 h-3 rounded-full bg-red-600"></span>               
-             </div>
+             {/* Indicators moved to pane headers */}
            </div>
         )}
 
@@ -63,43 +58,42 @@ const ResultViewer = ({ resultData, onDownload }) => {
           <div className="flex w-full h-full">
             {/* Left Pane (File 1) */}
             <div className="flex-1 border-r border-gray-300 flex flex-col">
-              <div className="p-2 text-center text-xs font-bold text-gray-500 bg-white border-b border-gray-200 sticky top-0 z-10">
+              <div className="p-2 flex items-center justify-center gap-2 text-xs font-bold text-gray-500 bg-white border-b border-gray-200 sticky top-0 z-10">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
                 File 1 (기준)
               </div>
-              <div className="flex-1 overflow-auto p-4 flex items-start justify-center">
+              <div className="flex-1 overflow-auto p-4 flex items-center justify-center">
                 <img 
                    src={file1_base64} 
                    alt="File 1" 
-                   className="max-w-full object-contain shadow-lg" 
+                   className="max-w-full max-h-full object-contain shadow-lg" 
                 />
               </div>
             </div>
 
             {/* Right Pane (File 2) */}
             <div className="flex-1 flex flex-col">
-              <div className="p-2 text-center text-xs font-bold text-gray-500 bg-white border-b border-gray-200 sticky top-0 z-10">
+              <div className="p-2 flex items-center justify-center gap-2 text-xs font-bold text-gray-500 bg-white border-b border-gray-200 sticky top-0 z-10">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-600"></span>
                 File 2 (비교군)
               </div>
-              <div className="flex-1 overflow-auto p-4 flex items-start justify-center">
+              <div className="flex-1 overflow-auto p-4 flex items-center justify-center">
                 <img 
                    src={file2_base64} 
                    alt="File 2" 
-                   className="max-w-full object-contain shadow-lg" 
+                   className="max-w-full max-h-full object-contain shadow-lg" 
                 />
               </div>
             </div>
           </div>
         ) : (
           // Single View (Overlay Mode or Fallback)
-          <div className="w-full h-full flex flex-col">
-            <div className="p-2 text-center text-xs font-bold text-gray-500 bg-white border-b border-gray-200">
-               겹쳐보기 (Overlay)
-            </div>
-            <div className="flex-1 overflow-auto p-4 flex items-start justify-center">
+          <div className="w-full h-full flex flex-col">            
+            <div className="flex-1 overflow-auto p-4 flex items-center justify-center">
               <img
                 src={result_base64}
                 alt="Comparison Result"
-                className="max-w-full object-contain shadow-lg"
+                className="max-w-full max-h-full object-contain shadow-lg"
               />
             </div>
           </div>

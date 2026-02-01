@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Image as ImageIcon, Play, AlertCircle, LogOut, ChevronLeft, ChevronRight, RotateCcw, Link } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import FileUploader from './components/FileUploader';
@@ -20,6 +20,9 @@ const ImageComparePage = () => {
   const [isResetHovered, setIsResetHovered] = useState(false);
   const [isSyncNav, setIsSyncNav] = useState(true);
   
+  // Cache for storing comparison results to avoid re-fetching
+  const resultCache = useRef(new Map());
+  
   const [settings, setSettings] = useState({
     mode: 'difference',
     diffThreshold: 30,
@@ -34,6 +37,7 @@ const ImageComparePage = () => {
     setPage1(page);
     setFile1Pages(1); // Reset page count on new file
     setResultData(null);
+    resultCache.current.clear(); // Clear cache when file changes
   };
 
   const handleFile2Select = (file, page) => {
@@ -41,6 +45,7 @@ const ImageComparePage = () => {
     setPage2(page);
     setFile2Pages(1); // Reset page count on new file
     setResultData(null);
+    resultCache.current.clear(); // Clear cache when file changes
   };
 
   const handleCompare = async (overridePage1, overridePage2) => {
@@ -51,6 +56,21 @@ const ImageComparePage = () => {
 
     const p1 = typeof overridePage1 === 'number' ? overridePage1 : page1;
     const p2 = typeof overridePage2 === 'number' ? overridePage2 : page2;
+    
+    // Generate a unique cache key based on inputs and settings
+    const cacheKey = `${p1}-${p2}-${settings.mode}-${settings.diffThreshold}-${settings.featureCount}`;
+
+    // Check cache first
+    if (resultCache.current.has(cacheKey)) {
+      const cachedResult = resultCache.current.get(cacheKey);
+      setResultData(cachedResult);
+      // Ensure page counts are consistent (though they shouldn't change for same file)
+      if (cachedResult.metadata) {
+        if (cachedResult.metadata.file1_pages) setFile1Pages(cachedResult.metadata.file1_pages);
+        if (cachedResult.metadata.file2_pages) setFile2Pages(cachedResult.metadata.file2_pages);
+      }
+      return;
+    }
 
     setError(null);
     setIsLoading(true);
@@ -66,6 +86,9 @@ const ImageComparePage = () => {
         page1: p1,
         page2: p2
       });
+      
+      // Store result in cache
+      resultCache.current.set(cacheKey, result);
 
       setResultData(result);
       
@@ -105,6 +128,7 @@ const ImageComparePage = () => {
     setResultData(null);
     setError(null);
     setResetKey(prev => prev + 1); // Force re-render of components with this key
+    resultCache.current.clear(); // Clear cache on reset
   };
 
   const changePage = (fileNum, delta) => {
@@ -347,17 +371,17 @@ const ImageComparePage = () => {
 
         {/* Page Selector Footer */}
         {(file1Pages > 1 || file2Pages > 1) && (
-          <div className="flex-shrink-0 h-20 border-t border-[var(--border-color)] bg-[var(--bg-primary)] flex items-center justify-center gap-10 px-6 z-10 relative">
+          <div className="flex-shrink-0 h-20 bg-[var(--bg-primary)] flex items-center justify-center gap-10 px-6 z-10 relative">
             
             {/* Sync Toggle */}
             <div className="absolute left-6 flex items-center gap-2">
               <button
                 onClick={() => setIsSyncNav(!isSyncNav)}
                 className={`
-                  flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-all
+                  flex items-center gap-2 px-3 py-2 text-sm transition-all
                   ${isSyncNav 
-                    ? 'bg-blue-50 border-blue-500 text-blue-700 font-medium' 
-                    : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                    ? 'text-blue-700 font-medium' 
+                    : 'text-gray-600'
                   }
                 `}
               >
@@ -374,7 +398,7 @@ const ImageComparePage = () => {
 
             {file1Pages > 1 && (
               <PageControl
-                label="File 1 Page"
+                label=""
                 currentPage={page1}
                 totalPages={file1Pages}
                 onPrev={() => changePage(1, -1)}
@@ -390,7 +414,7 @@ const ImageComparePage = () => {
 
             {file2Pages > 1 && (
               <PageControl
-                label="File 2 Page"
+                label=""
                 currentPage={page2}
                 totalPages={file2Pages}
                 onPrev={() => changePage(2, -1)}
