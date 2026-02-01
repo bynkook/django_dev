@@ -39,6 +39,6 @@ echo.
 echo   [앱 접속 주소]
 echo   * Chat 앱: http://localhost:5173/chat
 echo   * Image Inspector: http://localhost:5173/image-compare
-echo   * 통합 로그인 (모든 앱 공통): http://localhost:5173/login
+echo   * 앱 선택화면: http://localhost:5173
 echo ========================================================
 pause

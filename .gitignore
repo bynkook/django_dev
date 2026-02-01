@@ -12,3 +12,13 @@ doc/
 logs/
 *.pyc
 *.bak
+
+# gemini-cli
+GEMINI.md
+
+# gemini-cli settings
+.gemini/
+
+# GitHub App credentials
+gha-creds-*.json
+.github/

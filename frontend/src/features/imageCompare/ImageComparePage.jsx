@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Image as ImageIcon, Play, AlertCircle, LogOut, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
+import { Image as ImageIcon, Play, AlertCircle, LogOut, ChevronLeft, ChevronRight, RotateCcw, Link } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import FileUploader from './components/FileUploader';
 import SettingsPanel from './components/SettingsPanel';
@@ -18,6 +18,7 @@ const ImageComparePage = () => {
   const [file2Pages, setFile2Pages] = useState(1);
   const [resetKey, setResetKey] = useState(0);
   const [isResetHovered, setIsResetHovered] = useState(false);
+  const [isSyncNav, setIsSyncNav] = useState(true);
   
   const [settings, setSettings] = useState({
     mode: 'difference',
@@ -78,7 +79,7 @@ const ImageComparePage = () => {
       console.error('Image comparison failed:', err);
       
       if (err.response?.status === 413) {
-        setError('파일 크기가 너무 큽니다. 100MB 이하의 파일을 사용해주세요.');
+        setError('파일 크기가 너무 큽니다. 30MB 이하의 파일을 사용해주세요.');
       } else if (err.response?.status === 429) {
         setError('동시 처리 제한에 도달했습니다. 잠시 후 다시 시도해주세요.');
       } else if (err.response?.status === 504) {
@@ -107,20 +108,39 @@ const ImageComparePage = () => {
   };
 
   const changePage = (fileNum, delta) => {
-    let newPage, otherPage;
-    
-    if (fileNum === 1) {
-      newPage = Math.max(0, Math.min(page1 + delta, file1Pages - 1));
-      if (newPage === page1) return;
-      setPage1(newPage);
-      otherPage = page2;
-      handleCompare(newPage, otherPage);
+    if (isSyncNav) {
+      // Synchronized navigation
+      // Calculate target page based on the file that triggered the change
+      const currentBasePage = fileNum === 1 ? page1 : page2;
+      const targetPage = currentBasePage + delta;
+
+      // Determine new pages for both files, clamping to their respective limits
+      const newPage1 = Math.min(Math.max(0, targetPage), file1Pages - 1);
+      const newPage2 = Math.min(Math.max(0, targetPage), file2Pages - 1);
+
+      // If neither changed (e.g. both at start/end), do nothing
+      if (newPage1 === page1 && newPage2 === page2) return;
+
+      setPage1(newPage1);
+      setPage2(newPage2);
+      handleCompare(newPage1, newPage2);
     } else {
-      newPage = Math.max(0, Math.min(page2 + delta, file2Pages - 1));
-      if (newPage === page2) return;
-      setPage2(newPage);
-      otherPage = page1;
-      handleCompare(otherPage, newPage);
+      // Independent navigation
+      let newPage, otherPage;
+      
+      if (fileNum === 1) {
+        newPage = Math.max(0, Math.min(page1 + delta, file1Pages - 1));
+        if (newPage === page1) return;
+        setPage1(newPage);
+        otherPage = page2;
+        handleCompare(newPage, otherPage);
+      } else {
+        newPage = Math.max(0, Math.min(page2 + delta, file2Pages - 1));
+        if (newPage === page2) return;
+        setPage2(newPage);
+        otherPage = page1;
+        handleCompare(otherPage, newPage);
+      }
     }
   };
 
@@ -266,7 +286,7 @@ const ImageComparePage = () => {
           
           {canCompare && (
             <p className="text-xs text-gray-500 text-center px-2">
-              처리 시간: 소형 파일 3-6초, 대형 파일 최대 30-48초
+              처리 시간: 1분 이내에 완료됩니다.
             </p>
           )}
         </div>
@@ -327,7 +347,31 @@ const ImageComparePage = () => {
 
         {/* Page Selector Footer */}
         {(file1Pages > 1 || file2Pages > 1) && (
-          <div className="flex-shrink-0 h-20 border-t border-[var(--border-color)] bg-[var(--bg-primary)] flex items-center justify-center gap-10 px-6 z-10">
+          <div className="flex-shrink-0 h-20 border-t border-[var(--border-color)] bg-[var(--bg-primary)] flex items-center justify-center gap-10 px-6 z-10 relative">
+            
+            {/* Sync Toggle */}
+            <div className="absolute left-6 flex items-center gap-2">
+              <button
+                onClick={() => setIsSyncNav(!isSyncNav)}
+                className={`
+                  flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-all
+                  ${isSyncNav 
+                    ? 'bg-blue-50 border-blue-500 text-blue-700 font-medium' 
+                    : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                  }
+                `}
+              >
+                <Link size={16} className={isSyncNav ? 'text-blue-500' : 'text-gray-400'} />
+                1,2 동시 이동
+                <div className={`
+                  w-4 h-4 rounded border flex items-center justify-center ml-1 transition-colors
+                  ${isSyncNav ? 'bg-blue-500 border-blue-500' : 'border-gray-400 bg-white'}
+                `}>
+                  {isSyncNav && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                </div>
+              </button>
+            </div>
+
             {file1Pages > 1 && (
               <PageControl
                 label="File 1 Page"

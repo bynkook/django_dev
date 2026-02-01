@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Upload, X, FileImage, File as FileIcon } from 'lucide-react';
 
-const FileUploader = ({ onFileSelect, label, accept = "image/*,application/pdf", maxSizeMB = 100 }) => {
+const FileUploader = ({ onFileSelect, label, accept = "image/*,application/pdf", maxSizeMB = 30 }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [pageCount, setPageCount] = useState(1);

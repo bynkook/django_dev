@@ -44,8 +44,8 @@ const SettingsPanel = ({ settings, onSettingsChange }) => {
         </div>
         <p className="text-xs text-gray-500 mt-1">
           {mode === 'difference' 
-            ? '파랑: 이미지1만, 빨강: 이미지2만, 검정: 공통' 
-            : '주황: 이미지1, 초록: 이미지2'
+            ? '파랑: 이미지1 빨강: 이미지2, 검정: 공통' 
+            : '주황: 이미지1 초록: 이미지2'
           }
         </p>
       </div>
