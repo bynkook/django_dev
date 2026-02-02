@@ -15,4 +15,5 @@ urlpatterns = [
     # Feature Apps
     path('api/chat/', include('apps.fabrix_agent_chat.urls')),
     path('api/image-inspector/', include('apps.image_inspector.urls')),
+    path('api/data-explorer/', include('apps.data_explorer.urls')),
 ]

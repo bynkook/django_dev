@@ -68,3 +68,43 @@ export const chatApi = {
     return response.data;
   },
 };
+
+export const dataExplorerApi = {
+
+  // 샘플 데이터 로드 (GET)
+
+  getSampleHtml: async () => {
+
+    const response = await djangoClient.get('/api/data-explorer/html/');
+
+    return response.data;
+
+  },
+
+  
+
+  // CSV 파일 업로드 및 분석 (POST)
+
+  uploadCsv: async (file) => {
+
+    const formData = new FormData();
+
+    formData.append('file', file);
+
+    
+
+    const response = await djangoClient.post('/api/data-explorer/html/', formData, {
+
+      headers: {
+
+        'Content-Type': 'multipart/form-data',
+
+      },
+
+    });
+
+    return response.data;
+
+  },
+
+};

@@ -152,10 +152,15 @@ const ChatPage = () => {
     <div className="flex flex-col h-full bg-[var(--bg-primary)]">
       {/* Error Display - Top of Page */}
       {error && (
-        <div className="flex-shrink-0 px-6 py-3 bg-red-50 border-b border-red-200">
-          <div className="max-w-3xl mx-auto text-red-600 text-sm font-medium flex items-center gap-2">
-            <AlertCircle size={16} /> {error}
-          </div>
+        <div className="flex-shrink-0 bg-red-50 text-red-600 px-4 py-3 text-sm flex items-center gap-2 border-b border-red-100 z-50">
+          <AlertCircle size={16} />
+          {error}
+          <button 
+            onClick={() => setError(null)} 
+            className="ml-auto text-xs hover:underline"
+          >
+            닫기
+          </button>
         </div>
       )}
 

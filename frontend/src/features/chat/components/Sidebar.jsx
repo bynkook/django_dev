@@ -4,10 +4,14 @@ import {
   Trash2, 
   Plus, 
   Bot, 
-  ChevronDown, 
+  ChevronDown,
+  ChevronLeft,
+  Home,
   Check, 
-  LogOut
+  LogOut,
+  LayoutGrid
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Sidebar = ({ 
   sessions = [], 
@@ -21,181 +25,195 @@ const Sidebar = ({
   onAgentSelect,
   username = 'User',
   userEmail = '',
-  onLogout
+  onLogout,
+  onGoHome,
+  toggleSidebar
 }) => {
   const [isAgentMenuOpen, setIsAgentMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleSelectSession = (sessionId) => {
-    if (onSelectSession) {
-      onSelectSession(sessionId);
-    }
+    if (onSelectSession) onSelectSession(sessionId);
   };
 
   const handleNewChat = () => {
-    if (onNewChat) {
-      onNewChat();
-    }
+    if (onNewChat) onNewChat();
   };
 
   const handleDeleteSession = (e, sessionId) => {
     e.stopPropagation();
     if (window.confirm("Are you sure you want to delete this conversation?")) {
-      if (onDeleteSession) {
-        onDeleteSession(sessionId);
-      }
+      if (onDeleteSession) onDeleteSession(sessionId);
     }
   };
 
   const handleAgentSelect = (agent) => {
-    if (onAgentSelect) {
-      onAgentSelect(agent);
-    }
+    if (onAgentSelect) onAgentSelect(agent);
     setIsAgentMenuOpen(false);
   };
 
   const handleLogout = () => {
-    if (onLogout) {
-      onLogout();
-    }
+    if (onLogout) onLogout();
+  };
+
+  const handleGoHome = () => {
+    if (onGoHome) onGoHome();
+    else navigate('/');
   };
 
   return (
-    <div className="w-full h-full bg-[var(--bg-secondary)] flex flex-col">
-      {/* Header Area */}
-      <div className="p-4">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-            <Bot className="text-white" size={20} />
+    <div className="w-full h-full bg-[var(--bg-secondary)] flex flex-col overflow-hidden">
+      {/* 1. Header Area (Unified Design) */}
+      <div className="p-4 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-2 overflow-hidden">
+          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
+            <MessageSquare className="text-blue-600" size={20} />
           </div>
-          <h1 className="text-xl font-bold text-[var(--text-primary)]">Fabrix Agent Chat</h1>
+          <h1 className="text-xl font-bold text-[var(--text-primary)] truncate">
+            FabriX Chat
+          </h1>
         </div>
+        
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            onClick={handleGoHome}
+            className="p-2 text-gray-500 hover:bg-gray-200 rounded-lg transition-colors"
+            title="Go to App Selector"
+          >
+            <Home size={18} />
+          </button>
+          <button
+            onClick={toggleSidebar}
+            className="p-2 text-gray-500 hover:bg-gray-200 rounded-lg transition-colors"
+            title="Shrink Sidebar"
+          >
+            <ChevronLeft size={18} />
+          </button>
+        </div>
+      </div>
 
-        {/* Agent Selector */}
-        <div className="relative mb-4">
+      {/* 2. Agent Selector Area (Fixed Popup & Spacing) */}
+      <div className="px-4 mb-8 relative z-50">
+        <div className="relative">
           <button
             onClick={() => setIsAgentMenuOpen(!isAgentMenuOpen)}
             className="flex items-center justify-between gap-3 w-full px-4 py-3 bg-white border border-[var(--border-color)] rounded-xl hover:border-blue-300 hover:shadow-md transition-all text-left group"
           >
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg shrink-0">
-                <Bot size={18} />
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-100 shrink-0">
+                <Bot size={20} />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-[var(--text-secondary)] font-medium mb-0.5">
-                  Select Agent
-                </p>
-                <p className="font-semibold text-sm truncate text-[var(--text-primary)]">
-                  {selectedAgent ? (selectedAgent.label.length > 20 ? selectedAgent.label.slice(0, 20) + '...' : selectedAgent.label) : 'Choose an AI agent'}
+              <div className="overflow-hidden">
+                <p className="text-[10px] text-[var(--text-secondary)] uppercase font-bold tracking-wider">Select Agent</p>
+                <p className="font-bold text-[var(--text-primary)] truncate">
+                  {selectedAgent ? selectedAgent.name : 'Choose an AI agent'}
                 </p>
               </div>
             </div>
-            <ChevronDown 
-              size={16} 
-              className={`text-[var(--text-secondary)] group-hover:text-blue-500 transition-transform ${isAgentMenuOpen ? 'rotate-180' : ''}`} 
-            />
+            <ChevronDown size={18} className={`text-gray-400 transition-transform ${isAgentMenuOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {isAgentMenuOpen && (
             <>
-              <div className="fixed inset-0 z-10" onClick={() => setIsAgentMenuOpen(false)} />
-              <div className="absolute z-20 w-full mt-2 bg-white border border-[var(--border-color)] rounded-xl shadow-xl max-h-80 overflow-y-auto custom-scrollbar">
-                {agents.length > 0 ? agents.map(agent => (
-                  <button
-                    key={agent.agentId}
-                    onClick={() => handleAgentSelect(agent)}
-                    className="w-full flex items-center justify-between px-4 py-3 text-sm hover:bg-blue-50 transition-colors text-left border-b border-[var(--border-color)] last:border-b-0"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-medium truncate ${selectedAgent?.agentId === agent.agentId ? 'text-blue-600' : 'text-[var(--text-primary)]'}`}>
-                        {agent.label}
-                      </p>
-                      <p className="text-xs text-[var(--text-secondary)] truncate mt-0.5">
-                        {agent.agentId}
-                      </p>
+                <div className="fixed inset-0 z-40" onClick={() => setIsAgentMenuOpen(false)} />
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-64 overflow-y-auto custom-scrollbar overflow-x-hidden py-2">
+                {agents.length > 0 ? (
+                    agents.map((agent) => (
+                    <button
+                        key={agent.agentId}
+                        onClick={() => handleAgentSelect(agent)}
+                        className={`flex items-center gap-3 w-full px-4 py-3 hover:bg-blue-50 transition-colors text-left ${selectedAgent?.agentId === agent.agentId ? 'bg-blue-50' : ''}`}
+                    >
+                        <div className={`p-2 rounded-lg shrink-0 ${selectedAgent?.agentId === agent.agentId ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
+                        <Bot size={18} />
+                        </div>
+                        <div className="flex-1 overflow-hidden">
+                        <p className={`font-semibold text-sm truncate ${selectedAgent?.agentId === agent.agentId ? 'text-blue-700' : 'text-gray-700'}`}>
+                            {agent.name}
+                        </p>
+                        <p className="text-[10px] text-gray-400 truncate tracking-tight">{agent.agentId}</p>
+                        </div>
+                        {selectedAgent?.agentId === agent.agentId && <Check size={16} className="text-blue-600 shrink-0" />}
+                    </button>
+                    ))
+                ) : (
+                    <div className="px-4 py-6 text-center text-gray-400">
+                    <p className="text-sm">No agents available</p>
                     </div>
-                    {selectedAgent?.agentId === agent.agentId && (
-                      <Check size={16} className="text-blue-600 ml-2 shrink-0" />
-                    )}
-                  </button>
-                )) : (
-                  <div className="p-4 text-xs text-[var(--text-secondary)] text-center">No agents available</div>
                 )}
-              </div>
+                </div>
             </>
           )}
         </div>
+      </div>
 
-        {/* New Chat Button */}
+      {/* 3. New Chat Button Area */}
+      <div className="px-4 mb-6">
         <button
           onClick={handleNewChat}
-          className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 font-semibold text-sm group"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-md hover:shadow-lg active:scale-[0.98]"
         >
-          <Plus size={20} className="group-hover:rotate-90 transition-transform" />
-          <span>New Chat</span>
+          <Plus size={20} />
+          <span className="font-bold">New Chat</span>
         </button>
       </div>
 
-      {/* Session List */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 custom-scrollbar">
-        <div className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-3 px-3">
+      {/* 4. Session List Area */}
+      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1 custom-scrollbar">
+        <div className="px-4 text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-2 opacity-60">
           Recent Conversations
         </div>
-
+        
         {isLoading && sessions.length === 0 ? (
-          <div className="text-center text-xs text-[var(--text-secondary)] py-8 animate-pulse">Loading history...</div>
-        ) : (
-          <div className="flex flex-col gap-1.5">
-            {sessions.map((session) => (
-              <div
-                key={session.id}
-                onClick={() => handleSelectSession(session.id)}
-                className={`
-                  group relative flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer text-sm
-                  transition-all duration-200 border
-                  ${String(currentSessionId) === String(session.id)
-                    ? 'bg-white border-blue-200 shadow-md text-[var(--text-primary)] font-medium'
-                    : 'border-transparent text-[var(--text-secondary)] hover:bg-white/60 hover:text-[var(--text-primary)]'}
-                `}
-              >
-                <div className="flex items-center gap-3 overflow-hidden w-full">
-                  <MessageSquare 
-                    size={16} 
-                    className={`flex-shrink-0 ${String(currentSessionId) === String(session.id) ? 'text-blue-500' : 'text-gray-400'}`} 
-                  />
-                  <span className="truncate pr-8">{session.title || "New Conversation"}</span>
-                </div>
-
-                <button
-                  onClick={(e) => handleDeleteSession(e, session.id)}
-                  className="absolute right-2 p-1.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-500 transition-all"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            ))}
+          <div className="p-4 text-center text-gray-400 text-xs animate-pulse">
+            Loading history...
           </div>
+        ) : sessions.length === 0 ? (
+          <div className="p-4 text-center text-gray-400 text-xs">
+            No history yet
+          </div>
+        ) : (
+          sessions.map((session) => (
+            <div
+              key={session.id}
+              onClick={() => handleSelectSession(session.id)}
+              className={`
+                group relative flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all
+                ${String(currentSessionId) === String(session.id)
+                  ? 'bg-white shadow-sm border border-blue-100 text-blue-600 font-medium'
+                  : 'text-[var(--text-secondary)] hover:bg-white/50 hover:text-[var(--text-primary)]'
+                }
+              `}
+            >
+              <MessageSquare size={16} className={String(currentSessionId) === String(session.id) ? 'text-blue-600' : 'text-gray-400'} />
+              <span className="text-sm truncate pr-6">{session.title || "New Conversation"}</span>
+              
+              <button
+                onClick={(e) => handleDeleteSession(e, session.id)}
+                className="absolute right-2 opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))
         )}
       </div>
 
-      {/* Footer: User Profile + Logout */}
-      <div className="p-4 bg-[var(--bg-secondary)]">
+      {/* 5. Footer Area */}
+      <div className="p-4 bg-[var(--bg-secondary)] mt-auto shrink-0">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold shadow-sm shrink-0">
               {username.charAt(0).toUpperCase()}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate text-[var(--text-primary)]">{username}</p>
-              <p className="text-xs text-[var(--text-secondary)] truncate" title={userEmail}>
-                {userEmail}
-              </p>
+            <div className="overflow-hidden">
+              <p className="text-sm font-bold text-[var(--text-primary)] truncate">{username}</p>
+              <p className="text-[10px] text-[var(--text-secondary)] truncate">{userEmail}</p>
             </div>
           </div>
-
           <button 
             onClick={handleLogout}
-            className="p-2.5 text-[var(--text-secondary)] hover:text-red-500 hover:bg-red-50 rounded-lg transition-all shrink-0"
-            title="Logout"
+            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
           >
             <LogOut size={18} />
           </button>

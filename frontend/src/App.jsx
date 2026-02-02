@@ -4,6 +4,7 @@ import LoginPage from './features/auth/LoginPage';
 import MainLayout from './components/layout/MainLayout';
 import ChatPage from './features/chat/ChatPage';
 import ImageComparePage from './features/imageCompare/ImageComparePage';
+import DataExplorerPage from './features/dataExplorer/DataExplorerPage';
 import AppSelectorPage from './features/appSelector/AppSelectorPage';
 
 // --- Route Guard ---
@@ -40,6 +41,9 @@ const App = () => {
         <Route path="/chat" element={<PrivateRoute><MainLayout /></PrivateRoute>}>
           <Route index element={<ChatPage />} />
         </Route>
+
+        {/* Data Explorer - Standalone Layout */}
+        <Route path="/data-explorer" element={<PrivateRoute><DataExplorerPage /></PrivateRoute>} />
 
         {/* 404: 알 수 없는 경로는 로그인 페이지로 리다이렉트 */}
         <Route path="*" element={<Navigate to="/login" replace />} />

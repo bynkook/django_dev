@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageCircle, ImageIcon, Bot, ChevronRight } from 'lucide-react';
+import { MessageCircle, ImageIcon, Bot, ChevronRight, BarChart3 } from 'lucide-react';
 
 const AppSelectorPage = () => {
   const navigate = useNavigate();
@@ -21,6 +21,14 @@ const AppSelectorPage = () => {
       icon: ImageIcon,
       color: 'from-purple-500 to-pink-600',
       path: '/image-compare'
+    },
+    {
+      id: 'data-explorer',
+      name: 'Data Explorer',
+      description: '데이터를 탐색하고 시각화하여 인사이트를 도출합니다',
+      icon: BarChart3,
+      color: 'from-green-500 to-emerald-600',
+      path: '/data-explorer'
     }
   ];
 
@@ -101,8 +109,10 @@ const AppSelectorPage = () => {
           <div className="text-sm text-gray-500">
             직접 접속: 
             <a href="/chat" className="ml-2 text-blue-600 hover:underline">/chat</a>
-            <span className="mx-2">또는</span>
+            <span className="mx-2">,</span>
             <a href="/image-compare" className="text-purple-600 hover:underline">/image-compare</a>
+            <span className="mx-2">또는</span>
+            <a href="/data-explorer" className="text-green-600 hover:underline">/data-explorer</a>
           </div>
           
           <button 

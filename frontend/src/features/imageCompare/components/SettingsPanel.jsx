@@ -5,10 +5,10 @@ const SettingsPanel = ({ settings, onSettingsChange }) => {
   const { mode, diffThreshold, featureCount } = settings;
 
   return (
-    <div className="border border-gray-300 rounded-lg p-4 bg-white">
+    <div className="p-4 bg-white">
       <div className="flex items-center gap-2 mb-4">
-        <Settings size={18} className="text-gray-600" />
-        <h3 className="text-sm font-semibold text-[var(--text-primary)]">비교 설정</h3>
+        <Settings size={18} className="text-gray-400" />
+        <h3 className="text-sm font-bold text-[var(--text-primary)]">비교 설정</h3>
       </div>
       
       {/* 비교 모드 */}

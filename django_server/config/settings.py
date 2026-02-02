@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'apps.authentication',       # 인증 앱
     'apps.fabrix_agent_chat',    # AI 채팅 앱
     'apps.image_inspector',      # 이미지 비교 앱
+    'apps.data_explorer',        # 데이터 분석 앱 (PyGWalker)
 ]
 
 MIDDLEWARE = [
@@ -217,6 +218,10 @@ LOGGING = {
             'propagate': False,
         },
         'apps.fabrix_agent_chat': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+        },
+        'apps.data_explorer': {
             'handlers': ['console', 'file'],
             'level': 'INFO',
         },

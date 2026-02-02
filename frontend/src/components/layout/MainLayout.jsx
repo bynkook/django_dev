@@ -102,6 +102,10 @@ const MainLayout = () => {
     }));
   };
 
+  const handleGoHome = () => {
+    navigate('/');
+  };
+
   const handleLogout = async () => {
     if (window.confirm('Are you sure you want to logout?')) {
       try {
@@ -129,50 +133,44 @@ const MainLayout = () => {
 
   return (
     <div className="flex h-screen bg-[var(--bg-primary)] overflow-hidden">
-      {/* Sidebar Area - 완전히 사라지지 않고 좁은 버전 유지 */}
+      {/* Sidebar Area */}
       <aside
         className={`
-          relative z-10 flex-shrink-0 bg-[var(--bg-secondary)] border-r border-[var(--border-color)]
+          relative z-30 flex-shrink-0 bg-[var(--bg-secondary)]
           transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1.0)]
-          ${isSidebarOpen ? 'w-[280px]' : 'w-[56px]'}
+          ${isSidebarOpen ? 'w-[280px]' : 'w-0 overflow-hidden'}
         `}
       >
-        {isSidebarOpen ? (
-          // Full Sidebar
-          <div className="w-[280px] h-full flex flex-col">
-            <Sidebar 
-              sessions={sessions}
-              currentSessionId={currentSessionId}
-              onSelectSession={handleSelectSession}
-              onNewChat={handleNewChat}
-              isLoading={isLoadingSessions}
-              onDeleteSession={handleDeleteSession}
-              selectedAgent={selectedAgent}
-              agents={agents}
-              onAgentSelect={handleAgentSelect}
-              username={username}
-              userEmail={userEmail}
-              onLogout={handleLogout}
-            />
-          </div>
-        ) : (
-          // Collapsed Sidebar - Only Menu Icon
-          <div className="w-[56px] h-full flex flex-col">
-            <div className="flex-shrink-0 h-14 flex items-center justify-center">
-              <button
-                onClick={() => setIsSidebarOpen(true)}
-                className="p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-all duration-200"
-                title="Open Sidebar"
-              >
-                <Menu size={20} />
-              </button>
-            </div>
-          </div>
-        )}
+        <div className="w-[280px] h-full flex flex-col">
+          <Sidebar 
+            sessions={sessions}
+            currentSessionId={currentSessionId}
+            onSelectSession={handleSelectSession}
+            onNewChat={handleNewChat}
+            isLoading={isLoadingSessions}
+            onDeleteSession={handleDeleteSession}
+            selectedAgent={selectedAgent}
+            agents={agents}
+            onAgentSelect={handleAgentSelect}
+            username={username}
+            userEmail={userEmail}
+            onLogout={handleLogout}
+            onGoHome={handleGoHome}
+            toggleSidebar={() => setIsSidebarOpen(false)}
+          />
+        </div>
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-[var(--bg-primary)]">
+      <main className="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-[var(--bg-primary)] relative">
+        {!isSidebarOpen && (
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="absolute top-4 left-4 z-40 p-2 bg-white shadow-md rounded-lg text-gray-600 hover:text-blue-600 border border-gray-100"
+          >
+            <Menu size={20} />
+          </button>
+        )}
         <Outlet />
       </main>
     </div>

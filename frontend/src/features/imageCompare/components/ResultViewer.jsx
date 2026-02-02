@@ -6,11 +6,11 @@ const ResultViewer = ({ resultData, onDownload }) => {
 
   if (!resultData) {
     return (
-      <div className="h-full flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 m-4">
+      <div className="h-full flex items-center justify-center rounded-xl bg-gray-50/50 m-4">
         <div className="text-center">
-          <Maximize2 className="mx-auto mb-3 text-gray-400" size={48} />
-          <p className="text-gray-600 font-medium mb-1">비교 결과가 여기에 표시됩니다</p>
-          <p className="text-sm text-gray-500">두 파일을 업로드하고 "비교 시작" 버튼을 클릭하세요</p>
+          <Maximize2 className="mx-auto mb-3 text-gray-300" size={48} />
+          <p className="text-gray-400 font-medium mb-1">비교 결과가 여기에 표시됩니다</p>
+          <p className="text-sm text-gray-400">두 파일을 업로드하고 "비교 시작" 버튼을 클릭하세요</p>
         </div>
       </div>
     );
@@ -21,14 +21,14 @@ const ResultViewer = ({ resultData, onDownload }) => {
   const isDiffMode = metadata.mode === 'difference';
 
   return (
-    <div className="flex flex-col h-full border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm mx-4 mb-4">
+    <div className="flex flex-col h-full overflow-hidden bg-white mx-4 mb-4">
       {/* Header */}
-      <div className="flex-shrink-0 border-b border-gray-200 px-4 py-3 bg-gray-50 flex items-center justify-between">
+      <div className="flex-shrink-0 px-4 py-3 bg-white flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+          <h3 className="text-sm font-bold text-[var(--text-primary)]">
             {isDiffMode ? "비교 결과 (차이점 강조)" : "비교 결과 (오버레이)"}
           </h3>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-gray-400 mt-0.5">
             {metadata.result_size} • 매칭 품질: {(metadata.match_quality * 100).toFixed(0)}%
           </p>
         </div>
@@ -41,7 +41,7 @@ const ResultViewer = ({ resultData, onDownload }) => {
 
         <button
           onClick={() => onDownload(download_base64, metadata)}
-          className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors shadow-sm"
+          className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
         >
           <Download size={16} />
           PNG 다운로드
@@ -51,37 +51,37 @@ const ResultViewer = ({ resultData, onDownload }) => {
       {/* Viewer Body */}
       <div 
         ref={containerRef}
-        className="flex-1 relative overflow-auto bg-gray-100 flex"
+        className="flex-1 relative overflow-auto bg-gray-50 flex"
       >
         {isDiffMode && file1_base64 && file2_base64 ? (
           // Split View (Difference Mode)
           <div className="flex w-full h-full">
             {/* Left Pane (File 1) */}
-            <div className="flex-1 border-r border-gray-300 flex flex-col">
-              <div className="p-2 flex items-center justify-center gap-2 text-xs font-bold text-gray-500 bg-white border-b border-gray-200 sticky top-0 z-10">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+            <div className="flex-1 flex flex-col">
+              <div className="p-2 flex items-center justify-center gap-2 text-xs font-bold text-gray-400 bg-white sticky top-0 z-10 uppercase">
+                <span className="w-3 h-3 rounded-full bg-blue-500 shadow-sm"></span>
                 File 1 (기준)
               </div>
               <div className="flex-1 overflow-auto p-4 flex items-center justify-center">
                 <img 
                    src={file1_base64} 
                    alt="File 1" 
-                   className="max-w-full max-h-full object-contain shadow-lg" 
+                   className="max-w-full max-h-full object-contain" 
                 />
               </div>
             </div>
 
             {/* Right Pane (File 2) */}
-            <div className="flex-1 flex flex-col">
-              <div className="p-2 flex items-center justify-center gap-2 text-xs font-bold text-gray-500 bg-white border-b border-gray-200 sticky top-0 z-10">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-600"></span>
+            <div className="flex-1 flex flex-col border-l border-gray-100">
+              <div className="p-2 flex items-center justify-center gap-2 text-xs font-bold text-gray-400 bg-white sticky top-0 z-10 uppercase">
+                <span className="w-3 h-3 rounded-full bg-red-600 shadow-sm"></span>
                 File 2 (비교군)
               </div>
               <div className="flex-1 overflow-auto p-4 flex items-center justify-center">
                 <img 
                    src={file2_base64} 
                    alt="File 2" 
-                   className="max-w-full max-h-full object-contain shadow-lg" 
+                   className="max-w-full max-h-full object-contain" 
                 />
               </div>
             </div>

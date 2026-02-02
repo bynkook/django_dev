@@ -1,8 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { Image as ImageIcon, Play, AlertCircle, LogOut, ChevronLeft, ChevronRight, RotateCcw, Link } from 'lucide-react';
+import { Menu, AlertCircle, Link, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import FileUploader from './components/FileUploader';
-import SettingsPanel from './components/SettingsPanel';
+import ImageCompareSidebar from './components/ImageCompareSidebar';
 import ResultViewer from './components/ResultViewer';
 import LoadingOverlay from './components/LoadingOverlay';
 import { fastApi } from '../../api/fastapiApi';
@@ -10,6 +9,7 @@ import { authApi } from '../../api/djangoApi';
 
 const ImageComparePage = () => {
   const navigate = useNavigate();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [file1, setFile1] = useState(null);
   const [file2, setFile2] = useState(null);
   const [page1, setPage1] = useState(0);
@@ -250,133 +250,63 @@ const ImageComparePage = () => {
 
   return (
     <div className="flex h-screen bg-[var(--bg-primary)] overflow-hidden">
-      {/* Sidesbar */}
-      <aside className="w-full max-w-[320px] bg-[var(--bg-secondary)] border-r border-[var(--border-color)] flex flex-col z-20">
-        <div className="p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
-              <ImageIcon className="text-white" size={20} />
-            </div>
-            <h1 className="text-xl font-bold text-[var(--text-primary)]">Image Inspector</h1>
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 custom-scrollbar">
-          
-          <button
-            onClick={handleReset}
-            onMouseEnter={() => setIsResetHovered(true)}
-            onMouseLeave={() => setIsResetHovered(false)}
-            className={`
-              w-full flex items-center justify-center gap-2 px-3 py-2 mb-4 rounded-lg text-sm border transition-all
-              ${isResetHovered 
-                ? 'bg-blue-50 border-blue-500 text-blue-700 font-medium' 
-                : 'bg-white border-gray-300 text-gray-700'
-              }
-            `}
-          >
-            <RotateCcw size={16} />
-            새로운 비교 초기화
-          </button>
-
-          <div>
-            <div className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
-              File Upload
-            </div>
-            <div className="space-y-3">
-              <FileUploader
-                key={`uploader-1-${resetKey}`}
-                label="이미지/도면 1"
-                onFileSelect={handleFile1Select}
-              />
-              <FileUploader
-                key={`uploader-2-${resetKey}`}
-                label="이미지/도면 2"
-                onFileSelect={handleFile2Select}
-              />
-            </div>
-          </div>
-          
-          <div>
-            <div className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
-              Settings
-            </div>
-            <SettingsPanel
-              settings={settings}
-              onSettingsChange={setSettings}
-            />
-          </div>
-          
-          <button
-            onClick={() => handleCompare()}
-            disabled={!canCompare}
-            className={`
-              w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl
-              text-sm font-semibold transition-all shadow-md
-              ${canCompare || isLoading
-                ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white hover:shadow-lg'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }
-              ${isLoading ? 'opacity-70 cursor-wait' : ''}
-            `}
-          >
-            {isLoading ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" /> : <Play size={18} />}
-            {isLoading ? '처리 중...' : '비교 시작'}
-          </button>
-          
-          <div className="h-6 flex items-center justify-center">
-            {(canCompare || isLoading) && (
-              <p className="text-xs text-gray-500 text-center px-2">
-                처리 시간: 1분 이내에 완료됩니다.
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="p-4 bg-[var(--bg-secondary)]">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md shrink-0">
-                {username.charAt(0).toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold truncate text-[var(--text-primary)]">{username}</p>
-                <p className="text-xs text-[var(--text-secondary)] truncate" title={userEmail}>
-                  {userEmail}
-                </p>
-              </div>
-            </div>
-
-            <button 
-              onClick={handleLogout}
-              className="p-2.5 text-[var(--text-secondary)] hover:text-red-500 hover:bg-red-50 rounded-lg transition-all shrink-0"
-              title="Logout"
-            >
-              <LogOut size={18} />
-            </button>
-          </div>
-        </div>
-      </aside>
+      {/* Sidebar - Extracted to component */}
+      <ImageCompareSidebar 
+        isOpen={isSidebarOpen}
+        toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        username={username}
+        userEmail={userEmail}
+        handleLogout={handleLogout}
+        handleReset={handleReset}
+        setIsResetHovered={setIsResetHovered}
+        isResetHovered={isResetHovered}
+        resetKey={resetKey}
+        handleFile1Select={handleFile1Select}
+        handleFile2Select={handleFile2Select}
+        settings={settings}
+        setSettings={setSettings}
+        handleCompare={handleCompare}
+        canCompare={canCompare}
+        isLoading={isLoading}
+      />
 
       {/* Main Area */}
       <main className="flex-1 flex flex-col overflow-hidden relative">
-        <header className="flex-shrink-0 h-16 flex items-center justify-between px-6 border-b border-[var(--border-color)] bg-[var(--bg-primary)]/80 backdrop-blur-md z-10">
-          <div>
-            <h2 className="text-lg font-bold text-[var(--text-primary)]">
-              이미지/도면 비교 분석
-            </h2>
-            <p className="text-xs text-[var(--text-secondary)]">
-              두 이미지의 차이점을 정밀하게 비교합니다
-            </p>
+        {/* Toggle Button when sidebar closed */}
+        {!isSidebarOpen && (
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="absolute top-4 left-4 z-40 p-2 bg-white shadow-md rounded-lg text-gray-600 hover:text-blue-600"
+          >
+            <Menu size={20} />
+          </button>
+        )}
+
+        {/* Unified Error Banner (Replaces previous Header) */}
+        {error ? (
+          <div className="flex-shrink-0 bg-red-50 text-red-600 px-4 py-3 text-sm flex items-center gap-2 border-b border-red-100 z-50">
+            <AlertCircle size={16} />
+            {error}
+            <button 
+              onClick={() => setError(null)} 
+              className="ml-auto text-xs hover:underline"
+            >
+              닫기
+            </button>
           </div>
-          
-          {error && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs max-w-md">
-              <AlertCircle size={14} className="shrink-0" />
-              <span className="truncate">{error}</span>
+        ) : (
+          /* Simple Header purely for Title when no error */
+          <header className={`flex-shrink-0 h-16 flex items-center justify-between px-6 bg-[var(--bg-primary)]/80 backdrop-blur-md z-10 transition-all ${!isSidebarOpen ? 'pl-20' : ''}`}>
+             <div>
+              <h2 className="text-lg font-bold text-[var(--text-primary)]">
+                이미지/도면 비교 분석
+              </h2>
+              <p className="text-xs text-[var(--text-secondary)]">
+                두 이미지의 차이점을 정밀하게 비교합니다
+              </p>
             </div>
-          )}
-        </header>
+          </header>
+        )}
 
         <div className="flex-1 overflow-auto p-6 relative flex flex-col">
           {isLoading && <LoadingOverlay />}

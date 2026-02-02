@@ -19,3 +19,8 @@ opencv-python
 pymupdf
 Pillow
 numpy
+
+# Data Analysis & Visualization
+pandas
+pygwalker
+python-dotenv
