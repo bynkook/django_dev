@@ -9,5 +9,10 @@ urlpatterns = [
     path('', RedirectView.as_view(url='/admin/')), 
     
     # API URLs
-    path('api/', include('apps.fabrix_agent_chat.urls')),
+    # Authentication (전역)
+    path('api/auth/', include('apps.authentication.urls')),
+    
+    # Feature Apps
+    path('api/chat/', include('apps.fabrix_agent_chat.urls')),
+    path('api/image-inspector/', include('apps.image_inspector.urls')),
 ]
