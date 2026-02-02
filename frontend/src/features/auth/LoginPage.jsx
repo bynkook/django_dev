@@ -82,60 +82,60 @@ const LoginPage = () => {
       <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-500 rounded-full opacity-5 blur-[100px] pointer-events-none"></div>
 
       {/* 메인 카드 컨테이너 */}
-      <div className="relative w-full max-w-[520px] my-8 bg-[var(--bg-secondary)] rounded-3xl shadow-2xl border border-[var(--border-color)] overflow-hidden transition-all duration-300">
+      <div className="relative w-full max-w-[420px] my-4 bg-[var(--bg-secondary)] rounded-3xl shadow-2xl border border-[var(--border-color)] overflow-hidden transition-all duration-300 transform scale-[0.85] origin-center">
        
         {/* 상단 헤더 영역 */}
-        <div className="px-10 pt-12 pb-8 text-center">
-          <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight mb-2">
+        <div className="px-10 pt-8 pb-4 text-center">
+          <h1 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight mb-1">
             {isLoginMode ? 'Welcome Back' : 'Create Account'}
           </h1>
           <p className="text-[var(--text-secondary)] text-sm">
             {isLoginMode
-              ? 'Enter your credentials to access FabriX Agent.'
+              ? 'Enter your credential.'
               : 'Join us to experience the power of AI Agents.'}
           </p>
         </div>
 
         {/* 에러 메시지 */}
         {error && (
-          <div className="mx-10 mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 animate-fade-in">
-            <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-            <p className="text-red-500 text-sm font-medium">{error}</p>
+          <div className="mx-10 mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 animate-fade-in">
+            <div className="w-1 h-1 rounded-full bg-red-500 shrink-0" />
+            <p className="text-red-500 text-xs font-medium">{error}</p>
           </div>
         )}
 
         {/* 폼 영역 */}
-        <form onSubmit={handleSubmit} className="px-10 pb-12 flex flex-col gap-5">
+        <form onSubmit={handleSubmit} className="px-10 pb-8 flex flex-col gap-3.5">
          
           {/* Username */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider ml-1">Username</label>
+          <div className="space-y-1">
+            <label className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider ml-1">Username</label>
             <div className="relative group">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-[var(--accent-color)] transition-colors" size={20} />
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-[var(--accent-color)] transition-colors" size={18} />
               <input
                 type="text"
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
                 required
-                className="w-full pl-12 pr-4 py-3.5 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:border-transparent transition-all duration-200"
+                className="w-full pl-11 pr-4 py-2.5 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:border-transparent transition-all duration-200"
                 placeholder="Enter your ID"
               />
             </div>
           </div>
 
           {/* Password */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider ml-1">Password</label>
+          <div className="space-y-1">
+            <label className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider ml-1">Password</label>
             <div className="relative group">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-[var(--accent-color)] transition-colors" size={20} />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-[var(--accent-color)] transition-colors" size={18} />
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full pl-12 pr-12 py-3.5 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:border-transparent transition-all duration-200"
+                className="w-full pl-11 pr-11 py-2.5 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:border-transparent transition-all duration-200"
                 placeholder="••••••••"
               />
               <button
@@ -144,7 +144,7 @@ const LoginPage = () => {
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--accent-color)] transition-colors"
                 tabIndex={-1}
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </div>
@@ -153,17 +153,17 @@ const LoginPage = () => {
           {!isLoginMode && (
             <>
               {/* Password Confirm - 회원가입 시에만 표시 */}
-              <div className="space-y-1.5 animate-slide-in">
-                <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider ml-1">Confirm Password</label>
+              <div className="space-y-1 animate-slide-in">
+                <label className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider ml-1">Confirm Password</label>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-[var(--accent-color)] transition-colors" size={20} />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-[var(--accent-color)] transition-colors" size={18} />
                   <input
                     type={showPasswordConfirm ? "text" : "password"}
                     name="password_confirm"
                     value={formData.password_confirm}
                     onChange={handleChange}
                     required
-                    className="w-full pl-12 pr-12 py-3.5 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:border-transparent transition-all duration-200"
+                    className="w-full pl-11 pr-11 py-2.5 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:border-transparent transition-all duration-200"
                     placeholder="••••••••"
                   />
                   <button
@@ -172,44 +172,44 @@ const LoginPage = () => {
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--accent-color)] transition-colors"
                     tabIndex={-1}
                   >
-                    {showPasswordConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showPasswordConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
                 {/* 실시간 일치 여부 표시 */}
                 {formData.password_confirm && (
-                  <p className={`text-xs ml-1 ${formData.password === formData.password_confirm ? 'text-green-600' : 'text-red-500'}`}>
+                  <p className={`text-[10px] ml-1 ${formData.password === formData.password_confirm ? 'text-green-600' : 'text-red-500'}`}>
                     {formData.password === formData.password_confirm ? '✓ Passwords match' : '✗ Passwords do not match'}
                   </p>
                 )}
               </div>
 
-              <div className="space-y-1.5 animate-slide-in">
-                <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider ml-1">Email</label>
+              <div className="space-y-1 animate-slide-in">
+                <label className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider ml-1">Email</label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-[var(--accent-color)] transition-colors" size={20} />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-[var(--accent-color)] transition-colors" size={18} />
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="w-full pl-12 pr-4 py-3.5 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:border-transparent transition-all duration-200"
+                    className="w-full pl-11 pr-4 py-2.5 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:border-transparent transition-all duration-200"
                     placeholder="example@samsung.com"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1.5 animate-slide-in">
-                <label className="text-xs font-semibold text-[var(--accent-color)] uppercase tracking-wider ml-1">Admin Key</label>
+              <div className="space-y-1 animate-slide-in">
+                <label className="text-[10px] font-semibold text-[var(--accent-color)] uppercase tracking-wider ml-1">Admin Key</label>
                 <div className="relative group">
-                  <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--accent-color)]" size={20} />
+                  <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--accent-color)]" size={18} />
                   <input
                     type="text"
                     name="auth_key"
                     value={formData.auth_key}
                     onChange={handleChange}
                     required
-                    className="w-full pl-12 pr-4 py-3.5 bg-[var(--bg-tertiary)] border-2 border-[var(--accent-color)]/30 rounded-xl text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:border-[var(--accent-color)] transition-all duration-200"
+                    className="w-full pl-11 pr-4 py-2.5 bg-[var(--bg-tertiary)] border-2 border-[var(--accent-color)]/30 rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:border-[var(--accent-color)] transition-all duration-200"
                     placeholder="6-digit secure key"
                   />
                 </div>
@@ -221,22 +221,22 @@ const LoginPage = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="mt-4 w-full py-4 bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="mt-2 w-full py-3 bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
               <>
-                {isLoginMode ? 'Sign In' : 'Create Account'}
-                <ArrowRight size={20} />
+                <span className="text-sm">{isLoginMode ? 'Sign In' : 'Create Account'}</span>
+                <ArrowRight size={18} />
               </>
             )}
           </button>
         </form>
 
         {/* Footer Toggle */}
-        <div className="bg-[var(--bg-tertiary)]/50 px-10 py-6 text-center border-t border-[var(--border-color)]">
-          <p className="text-[var(--text-secondary)] text-sm">
+        <div className="bg-[var(--bg-tertiary)]/50 px-10 py-4 text-center border-t border-[var(--border-color)]">
+          <p className="text-[var(--text-secondary)] text-xs">
             {isLoginMode ? "Don't have an account? " : "Already have an account? "}
             <button
               onClick={() => {

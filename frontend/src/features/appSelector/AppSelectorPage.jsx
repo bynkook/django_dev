@@ -28,6 +28,13 @@ const AppSelectorPage = () => {
     navigate(app.path);
   };
 
+  const handleLogout = () => {
+    if (window.confirm('로그아웃 하시겠습니까?')) {
+      sessionStorage.clear();
+      navigate('/login');
+    }
+  };
+
   // 사용자 정보
   const username = sessionStorage.getItem('username') || 'User';
 
@@ -40,7 +47,7 @@ const AppSelectorPage = () => {
             <Bot className="text-white" size={28} />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Fabrix Platform
+            HT AI-Platform 2026
           </h1>
           <p className="text-gray-600 text-sm">
             안녕하세요, <span className="font-semibold text-gray-900">{username}</span>님! 사용할 앱을 선택하세요.
@@ -48,53 +55,62 @@ const AppSelectorPage = () => {
         </div>
 
         {/* App Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {apps.map((app) => {
-            const Icon = app.icon;
-            return (
-              <button
-                key={app.id}
-                onClick={() => handleSelectApp(app)}
-                className="group relative bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 text-left overflow-hidden border-2 border-transparent hover:border-blue-200"
-              >
-                {/* Background Gradient */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${app.color} opacity-0 group-hover:opacity-5 transition-opacity`} />
-                
-                {/* Content */}
-                <div className="relative z-10">
-                  <div className={`inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br ${app.color} mb-3 shadow-md group-hover:scale-110 transition-transform`}>
-                    <Icon className="text-white" size={22} />
+        <div className="flex justify-center">
+          <div className="flex flex-wrap justify-center gap-4 w-full">
+            {apps.map((app) => {
+              const Icon = app.icon;
+              return (
+                <button
+                  key={app.id}
+                  onClick={() => handleSelectApp(app)}
+                  className="group relative bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 p-4 text-left overflow-hidden border-2 border-transparent hover:border-blue-200 w-full sm:w-[calc(50%-8px)] md:w-[220px] max-w-[220px]"
+                >
+                  {/* Background Gradient */}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${app.color} opacity-0 group-hover:opacity-5 transition-opacity`} />
+                  
+                  {/* Content */}
+                  <div className="relative z-10">
+                    <div className={`inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br ${app.color} mb-2 shadow-sm group-hover:scale-110 transition-transform`}>
+                      <Icon className="text-white" size={18} />
+                    </div>
+                    
+                    <h3 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+                      {app.name}
+                    </h3>
+                    
+                    <p className="text-gray-500 text-xs mb-2 leading-relaxed line-clamp-2">
+                      {app.description}
+                    </p>
+                    
+                    <div className="flex items-center text-xs text-blue-600 font-semibold group-hover:translate-x-1 transition-transform">
+                      <span>시작하기</span>
+                      <ChevronRight size={14} className="ml-0.5" />
+                    </div>
                   </div>
-                  
-                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-                    {app.name}
-                  </h3>
-                  
-                  <p className="text-gray-600 text-sm mb-3 leading-relaxed">
-                    {app.description}
-                  </p>
-                  
-                  <div className="flex items-center text-sm text-blue-600 font-semibold group-hover:translate-x-2 transition-transform">
-                    <span>시작하기</span>
-                    <ChevronRight size={18} className="ml-1" />
-                  </div>
-                </div>
 
-                {/* Decorative Circle */}
-                <div className={`absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-gradient-to-br ${app.color} opacity-10 group-hover:opacity-20 transition-opacity`} />
-              </button>
-            );
-          })}
+                  {/* Decorative Circle */}
+                  <div className={`absolute -right-4 -bottom-4 w-16 h-16 rounded-full bg-gradient-to-br ${app.color} opacity-10 group-hover:opacity-20 transition-opacity`} />
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-12 text-sm text-gray-500">
-          <p>
+        <div className="text-center mt-12 space-y-4">
+          <div className="text-sm text-gray-500">
             직접 접속: 
             <a href="/chat" className="ml-2 text-blue-600 hover:underline">/chat</a>
             <span className="mx-2">또는</span>
             <a href="/image-compare" className="text-purple-600 hover:underline">/image-compare</a>
-          </p>
+          </div>
+          
+          <button 
+            onClick={handleLogout}
+            className="text-sm font-medium text-gray-400 hover:text-red-500 transition-colors duration-200 flex items-center gap-1 mx-auto"
+          >
+            <span>Log out</span>
+          </button>
         </div>
       </div>
     </div>
