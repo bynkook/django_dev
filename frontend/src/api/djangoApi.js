@@ -24,10 +24,9 @@ export const authApi = {
 
 // [추가] Agent 목록 조회 API
 // Backend urls.py에 추가한 path('agents/', ...) 와 매핑됩니다.
-// 기존 패턴에 맞춰 /api/ 접두사를 포함합니다.
 export const agentApi = {
   getAgents: async () => {
-    const response = await djangoClient.get('/api/agents/');
+    const response = await djangoClient.get('/api/chat/agents/');
     return response.data;
   },
 };
@@ -35,13 +34,13 @@ export const agentApi = {
 export const chatApi = {
   // 대화방 목록 조회
   getSessions: async () => {
-    const response = await djangoClient.get('/api/sessions/');
+    const response = await djangoClient.get('/api/chat/sessions/');
     return response.data;
   },
 
   // 새 대화방 생성
   createSession: async (agentId, title) => {
-    const response = await djangoClient.post('/api/sessions/', {
+    const response = await djangoClient.post('/api/chat/sessions/', {
       agent_id: agentId,
       title: title || "New Chat",
     });
@@ -50,13 +49,13 @@ export const chatApi = {
 
   // 대화방 상세 조회 (메시지 내역 포함)
   getSessionDetail: async (sessionId) => {
-    const response = await djangoClient.get(`/api/sessions/${sessionId}/`);
+    const response = await djangoClient.get(`/api/chat/sessions/${sessionId}/`);
     return response.data;
   },
 
   // 메시지 저장 (User 질문 또는 AI 답변)
   saveMessage: async (sessionId, role, content) => {
-    const response = await djangoClient.post(`/api/sessions/${sessionId}/messages/`, {
+    const response = await djangoClient.post(`/api/chat/sessions/${sessionId}/messages/`, {
       role,
       content,
     });
@@ -65,7 +64,7 @@ export const chatApi = {
 
   // 대화방 삭제
   deleteSession: async (sessionId) => {
-    const response = await djangoClient.delete(`/api/sessions/${sessionId}/`);
+    const response = await djangoClient.delete(`/api/chat/sessions/${sessionId}/`);
     return response.data;
   },
 };
