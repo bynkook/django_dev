@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../../api/djangoApi';
-import { Lock, Mail, User, Key, ShieldCheck, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, User, Key, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ const LoginPage = () => {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    password_confirm: '',  // 비밀번호 확인 필드 추가
+    password_confirm: '',
     email: '',
     auth_key: '',
   });
@@ -27,7 +27,6 @@ const LoginPage = () => {
     e.preventDefault();
     setError('');
     
-    // 회원가입 시 비밀번호 확인 검증
     if (!isLoginMode && formData.password !== formData.password_confirm) {
       setError('Passwords do not match. Please try again.');
       return;
@@ -47,17 +46,13 @@ const LoginPage = () => {
       }
 
       if (data.token) {
-        // [검토 완료] Backend가 보내준 email을 우선적으로 사용하도록 수정됨
-        // sessionStorage 사용 (브라우저 종료 시 로그아웃)
         sessionStorage.setItem('authToken', data.token);
         sessionStorage.setItem('userId', data.user_id);
         sessionStorage.setItem('username', data.username);
         
-        // [핵심] Backend에서 email이 오면 그것을 저장, 없으면 입력값(회원가입시), 그것도 없으면 기본값
         const emailToSave = data.email || formData.email || 'user@example.com';
         sessionStorage.setItem('email', emailToSave);
         
-        // returnTo가 있으면 해당 경로로, 없으면 앱 선택 페이지로
         const returnTo = sessionStorage.getItem('returnTo');
         if (returnTo && (returnTo === '/chat' || returnTo === '/image-compare')) {
           sessionStorage.removeItem('returnTo');
@@ -77,19 +72,19 @@ const LoginPage = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-primary)] p-4 overflow-y-auto">
-      {/* 배경 데코레이션 (선택 사항: 은은한 그라데이션 원) */}
+      {/* 배경 데코레이션 */}
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[var(--accent-color)] rounded-full opacity-5 blur-[100px] pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-500 rounded-full opacity-5 blur-[100px] pointer-events-none"></div>
 
       {/* 메인 카드 컨테이너 */}
-      <div className="relative w-full max-w-[420px] my-4 bg-[var(--bg-secondary)] rounded-3xl shadow-2xl border border-[var(--border-color)] overflow-hidden transition-all duration-300 transform scale-[0.85] origin-center">
+      <div className="relative w-full max-w-[340px] my-4 bg-[var(--bg-secondary)] rounded-2xl shadow-2xl border border-[var(--border-color)] overflow-hidden transition-all duration-300 transform scale-[0.9] origin-center">
        
         {/* 상단 헤더 영역 */}
-        <div className="px-10 pt-8 pb-4 text-center">
-          <h1 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight mb-1">
+        <div className="px-6 pt-6 pb-2 text-center">
+          <h1 className="text-xl font-extrabold text-[var(--text-primary)] tracking-tight mb-0.5">
             {isLoginMode ? 'Welcome Back' : 'Create Account'}
           </h1>
-          <p className="text-[var(--text-secondary)] text-sm">
+          <p className="text-[var(--text-secondary)] text-[11px]">
             {isLoginMode
               ? 'Enter your credential.'
               : 'Join us to experience the power of AI Agents.'}
@@ -98,53 +93,53 @@ const LoginPage = () => {
 
         {/* 에러 메시지 */}
         {error && (
-          <div className="mx-10 mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 animate-fade-in">
+          <div className="mx-6 mb-3 p-2 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2 animate-fade-in">
             <div className="w-1 h-1 rounded-full bg-red-500 shrink-0" />
-            <p className="text-red-500 text-xs font-medium">{error}</p>
+            <p className="text-red-500 text-[10px] font-medium">{error}</p>
           </div>
         )}
 
         {/* 폼 영역 */}
-        <form onSubmit={handleSubmit} className="px-10 pb-8 flex flex-col gap-3.5">
+        <form onSubmit={handleSubmit} className="px-6 pb-6 flex flex-col gap-2">
          
           {/* Username */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider ml-1">Username</label>
+          <div className="space-y-0.5">
+            <label className="text-[9px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider ml-1">Username</label>
             <div className="relative group">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-[var(--accent-color)] transition-colors" size={18} />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-[var(--accent-color)] transition-colors" size={16} />
               <input
                 type="text"
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
                 required
-                className="w-full pl-11 pr-4 py-2.5 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:border-transparent transition-all duration-200"
+                className="w-full pl-9 pr-3 py-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:border-transparent transition-all duration-200"
                 placeholder="Enter your ID"
               />
             </div>
           </div>
 
           {/* Password */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider ml-1">Password</label>
+          <div className="space-y-0.5">
+            <label className="text-[9px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider ml-1">Password</label>
             <div className="relative group">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-[var(--accent-color)] transition-colors" size={18} />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-[var(--accent-color)] transition-colors" size={16} />
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full pl-11 pr-11 py-2.5 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:border-transparent transition-all duration-200"
+                className="w-full pl-9 pr-9 py-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:border-transparent transition-all duration-200"
                 placeholder="••••••••"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--accent-color)] transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--accent-color)] transition-colors"
                 tabIndex={-1}
               >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>
             </div>
           </div>
@@ -152,64 +147,57 @@ const LoginPage = () => {
           {/* 회원가입 추가 필드 */}
           {!isLoginMode && (
             <>
-              {/* Password Confirm - 회원가입 시에만 표시 */}
-              <div className="space-y-1 animate-slide-in">
-                <label className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider ml-1">Confirm Password</label>
+              <div className="space-y-0.5 animate-slide-in">
+                <label className="text-[9px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider ml-1">Confirm Password</label>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-[var(--accent-color)] transition-colors" size={18} />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-[var(--accent-color)] transition-colors" size={16} />
                   <input
                     type={showPasswordConfirm ? "text" : "password"}
                     name="password_confirm"
                     value={formData.password_confirm}
                     onChange={handleChange}
                     required
-                    className="w-full pl-11 pr-11 py-2.5 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:border-transparent transition-all duration-200"
+                    className="w-full pl-9 pr-9 py-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:border-transparent transition-all duration-200"
                     placeholder="••••••••"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--accent-color)] transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--accent-color)] transition-colors"
                     tabIndex={-1}
                   >
-                    {showPasswordConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                    {showPasswordConfirm ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
                 </div>
-                {/* 실시간 일치 여부 표시 */}
-                {formData.password_confirm && (
-                  <p className={`text-[10px] ml-1 ${formData.password === formData.password_confirm ? 'text-green-600' : 'text-red-500'}`}>
-                    {formData.password === formData.password_confirm ? '✓ Passwords match' : '✗ Passwords do not match'}
-                  </p>
-                )}
               </div>
 
-              <div className="space-y-1 animate-slide-in">
-                <label className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider ml-1">Email</label>
+              <div className="space-y-0.5 animate-slide-in">
+                <label className="text-[9px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider ml-1">Email</label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-[var(--accent-color)] transition-colors" size={18} />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-[var(--accent-color)] transition-colors" size={16} />
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="w-full pl-11 pr-4 py-2.5 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:border-transparent transition-all duration-200"
+                    className="w-full pl-9 pr-3 py-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:border-transparent transition-all duration-200"
                     placeholder="example@samsung.com"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1 animate-slide-in">
-                <label className="text-[10px] font-semibold text-[var(--accent-color)] uppercase tracking-wider ml-1">Admin Key</label>
+              <div className="space-y-0.5 animate-slide-in">
+                <label className="text-[9px] font-semibold text-[var(--accent-color)] uppercase tracking-wider ml-1">Admin Key</label>
                 <div className="relative group">
-                  <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--accent-color)]" size={18} />
+                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--accent-color)]" size={16} />
                   <input
                     type="text"
                     name="auth_key"
                     value={formData.auth_key}
                     onChange={handleChange}
                     required
-                    className="w-full pl-11 pr-4 py-2.5 bg-[var(--bg-tertiary)] border-2 border-[var(--accent-color)]/30 rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:border-[var(--accent-color)] transition-all duration-200"
+                    className="w-full pl-9 pr-3 py-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:border-transparent transition-all duration-200"
                     placeholder="6-digit secure key"
                   />
                 </div>
@@ -221,28 +209,27 @@ const LoginPage = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="mt-2 w-full py-3 bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="mt-2 w-full py-2 bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-white font-bold rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {isLoading ? (
-              <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
               <>
                 <span className="text-sm">{isLoginMode ? 'Sign In' : 'Create Account'}</span>
-                <ArrowRight size={18} />
+                <ArrowRight size={16} />
               </>
             )}
           </button>
         </form>
 
         {/* Footer Toggle */}
-        <div className="bg-[var(--bg-tertiary)]/50 px-10 py-4 text-center border-t border-[var(--border-color)]">
-          <p className="text-[var(--text-secondary)] text-xs">
+        <div className="bg-[var(--bg-tertiary)]/50 px-6 py-3 text-center border-t border-[var(--border-color)]">
+          <p className="text-[var(--text-secondary)] text-[10px]">
             {isLoginMode ? "Don't have an account? " : "Already have an account? "}
             <button
               onClick={() => {
                 setIsLoginMode(!isLoginMode);
                 setError('');
-                // 폼 초기화
                 setFormData({
                   username: '',
                   password: '',
