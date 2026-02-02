@@ -60,7 +60,7 @@ const ImageComparePage = () => {
     // Generate a unique cache key based on inputs and settings
     const cacheKey = `${p1}-${p2}-${settings.mode}-${settings.diffThreshold}-${settings.featureCount}`;
 
-    // Check cache first
+    // Check cache first - return immediately without triggering loading state
     if (resultCache.current.has(cacheKey)) {
       const cachedResult = resultCache.current.get(cacheKey);
       setResultData(cachedResult);
@@ -71,6 +71,10 @@ const ImageComparePage = () => {
       }
       return;
     }
+
+    // Save current scroll position before loading
+    const mainContent = document.querySelector('.flex-1.overflow-auto');
+    const scrollTop = mainContent?.scrollTop || 0;
 
     setError(null);
     setIsLoading(true);
@@ -97,6 +101,13 @@ const ImageComparePage = () => {
         if (result.metadata.file1_pages) setFile1Pages(result.metadata.file1_pages);
         if (result.metadata.file2_pages) setFile2Pages(result.metadata.file2_pages);
       }
+
+      // Restore scroll position after a short delay
+      setTimeout(() => {
+        if (mainContent) {
+          mainContent.scrollTop = scrollTop;
+        }
+      }, 50);
 
     } catch (err) {
       console.error('Image comparison failed:', err);
@@ -298,21 +309,24 @@ const ImageComparePage = () => {
             className={`
               w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl
               text-sm font-semibold transition-all shadow-md
-              ${canCompare
+              ${canCompare || isLoading
                 ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white hover:shadow-lg'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }
+              ${isLoading ? 'opacity-70 cursor-wait' : ''}
             `}
           >
-            <Play size={18} />
-            비교 시작
+            {isLoading ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" /> : <Play size={18} />}
+            {isLoading ? '처리 중...' : '비교 시작'}
           </button>
           
-          {canCompare && (
-            <p className="text-xs text-gray-500 text-center px-2">
-              처리 시간: 1분 이내에 완료됩니다.
-            </p>
-          )}
+          <div className="h-6 flex items-center justify-center">
+            {(canCompare || isLoading) && (
+              <p className="text-xs text-gray-500 text-center px-2">
+                처리 시간: 1분 이내에 완료됩니다.
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="p-4 bg-[var(--bg-secondary)]">
