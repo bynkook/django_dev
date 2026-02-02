@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'corsheaders',               # CORS 설정
 
     # Local Apps
+    'apps.core',                 # 코어 유틸리티
     'apps.authentication',       # 인증 앱
     'apps.fabrix_agent_chat',    # AI 채팅 앱
     'apps.image_inspector',      # 이미지 비교 앱
