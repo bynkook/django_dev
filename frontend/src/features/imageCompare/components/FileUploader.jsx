@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Upload, X, FileImage, File as FileIcon } from 'lucide-react';
 
-const FileUploader = ({ onFileSelect, label, accept = "image/*,application/pdf", maxSizeMB = 30 }) => {
+const FileUploader = ({ onFileSelect, label, accept = "image/*,application/pdf,.tif,.tiff", maxSizeMB = 30 }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [pageCount, setPageCount] = useState(1);
@@ -20,8 +20,14 @@ const FileUploader = ({ onFileSelect, label, accept = "image/*,application/pdf",
 
     setSelectedFile(file);
     
-    // PDF 페이지 수 확인은 백엔드에서 처리하므로 여기서는 기본값 설정
-    if (file.type === 'application/pdf') {
+    // PDF 또는 TIFF인 경우 다중 페이지 가능성 설정
+    const isMultiPage = file.type === 'application/pdf' || 
+                        file.type === 'image/tiff' || 
+                        file.type === 'image/tif' ||
+                        file.name.toLowerCase().endsWith('.tif') ||
+                        file.name.toLowerCase().endsWith('.tiff');
+    
+    if (isMultiPage) {
       setPageCount(1); // 백엔드에서 실제 페이지 수를 반환받을 수 있음
     }
     
@@ -60,7 +66,13 @@ const FileUploader = ({ onFileSelect, label, accept = "image/*,application/pdf",
     onFileSelect(selectedFile, newPage);
   };
 
-  const isPDF = selectedFile?.type === 'application/pdf';
+  const isMultiPage = selectedFile && (
+    selectedFile.type === 'application/pdf' || 
+    selectedFile.type === 'image/tiff' || 
+    selectedFile.type === 'image/tif' ||
+    selectedFile.name.toLowerCase().endsWith('.tif') ||
+    selectedFile.name.toLowerCase().endsWith('.tiff')
+  );
 
   return (
     <div className="w-full">
@@ -96,7 +108,7 @@ const FileUploader = ({ onFileSelect, label, accept = "image/*,application/pdf",
             클릭하거나 파일을 드래그하세요
           </p>
           <p className="text-xs text-gray-500">
-            이미지 (JPEG, PNG, GIF) 또는 PDF (최대 {maxSizeMB}MB)
+            이미지 (JPEG, PNG, GIF, TIFF) 또는 PDF (최대 {maxSizeMB}MB)
           </p>
         </div>
       ) : (
@@ -104,7 +116,7 @@ const FileUploader = ({ onFileSelect, label, accept = "image/*,application/pdf",
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 rounded-lg">
-                {isPDF ? (
+                {isMultiPage ? (
                   <FileIcon className="text-blue-600" size={20} />
                 ) : (
                   <FileImage className="text-blue-600" size={20} />
@@ -129,11 +141,11 @@ const FileUploader = ({ onFileSelect, label, accept = "image/*,application/pdf",
             </button>
           </div>
           
-          {/* PDF 페이지 선택 */}
-          {isPDF && pageCount > 1 && (
+          {/* 다중 페이지 선택 (PDF/TIFF) */}
+          {isMultiPage && pageCount > 1 && (
             <div className="pt-3 border-t border-gray-200">
               <label className="block text-xs font-medium text-gray-700 mb-2">
-                페이지 선택 (PDF)
+                페이지 선택 (PDF/TIFF)
               </label>
               <div className="flex items-center gap-2">
                 <input

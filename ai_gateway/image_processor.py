@@ -51,6 +51,45 @@ def pdf_to_image(pdf_bytes: bytes, page_num: int = 0, dpi: int = 150) -> Tuple[n
         raise ValueError(f"PDF 변환 실패: {str(e)}")
 
 
+def tiff_to_image(tiff_bytes: bytes, page_num: int = 0) -> Tuple[np.ndarray, int]:
+    """
+    Multi-page TIFF를 이미지로 변환
+    
+    Args:
+        tiff_bytes: TIFF 파일의 바이트 데이터
+        page_num: 변환할 페이지 번호 (0-based)
+    
+    Returns:
+        (이미지 BGR 배열, 전체 페이지 수)
+    """
+    try:
+        # PIL로 TIFF 열기
+        tiff_image = Image.open(io.BytesIO(tiff_bytes))
+        
+        # 전체 페이지 수 확인 (n_frames 속성 사용)
+        total_pages = getattr(tiff_image, 'n_frames', 1)
+        
+        # 요청한 페이지로 이동
+        if page_num >= total_pages:
+            page_num = 0
+            
+        tiff_image.seek(page_num)
+        
+        # RGB로 변환 후 numpy 배열로
+        if tiff_image.mode != 'RGB':
+            tiff_image = tiff_image.convert('RGB')
+        
+        img_array = np.array(tiff_image)
+        # PIL은 RGB, OpenCV는 BGR 사용하므로 변환
+        img_bgr = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+        
+        return img_bgr, total_pages
+        
+    except Exception as e:
+        logger.error(f"TIFF 변환 실패: {str(e)}")
+        raise ValueError(f"TIFF 변환 실패: {str(e)}")
+
+
 def load_file(file_bytes: bytes, content_type: str, page_num: int = 0) -> Tuple[np.ndarray, int, str]:
     """
     파일 로드 (이미지 또는 PDF)
@@ -67,6 +106,9 @@ def load_file(file_bytes: bytes, content_type: str, page_num: int = 0) -> Tuple[
         if "pdf" in content_type.lower():
             img_bgr, total_pages = pdf_to_image(file_bytes, page_num=page_num)
             return img_bgr, total_pages, "pdf"
+        elif "tiff" in content_type.lower() or "tif" in content_type.lower():
+            img_bgr, total_pages = tiff_to_image(file_bytes, page_num=page_num)
+            return img_bgr, total_pages, "tiff"
         else:
             arr = np.frombuffer(file_bytes, np.uint8)
             img = cv2.imdecode(arr, cv2.IMREAD_COLOR)

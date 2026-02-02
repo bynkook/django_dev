@@ -17,7 +17,7 @@ call .venv\Scripts\activate
 
 :: 2. 키 생성 및 출력
 echo.
-echo 아래 생성된 키를 복사(Drag & Right Click)하세요.
+echo 아래 생성된 키를 복사하세요.
 echo ------------------------------------------------------------
 cd django_server
 python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"

@@ -333,7 +333,14 @@ async def compare_images(
     MAX_FILE_SIZE = 30 * 1024 * 1024
     
     # MIME 타입 검증
-    ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf']
+    ALLOWED_TYPES = [
+        'image/jpeg', 
+        'image/png', 
+        'image/gif', 
+        'application/pdf',
+        'image/tiff',
+        'image/tif'
+    ]
     
     if file1.content_type not in ALLOWED_TYPES:
         raise HTTPException(
