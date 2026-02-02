@@ -35,8 +35,19 @@ export const fastApiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  // FastAPI는 인증을 Django 토큰으로 검증하거나 IP로 허용 (현재는 IP 허용 모드)
 });
+
+// FastAPI 요청에도 Django 토큰 포함 (Security)
+fastApiClient.interceptors.request.use(
+  (config) => {
+    const token = sessionStorage.getItem('authToken'); 
+    if (token) {
+      config.headers['Authorization'] = `Token ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 // --- Helper for SSE URL ---
 // EventSource는 axios를 쓰지 않으므로 URL 생성 헬퍼가 필요함

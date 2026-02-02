@@ -3,11 +3,12 @@ FastAPI Router: Image Compare
 이미지/PDF/TIFF 비교 엔드포인트
 """
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 import asyncio
 import logging
 
 from ..services.image_processor import process_comparison
+from ..dependencies import verify_token
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -16,7 +17,7 @@ logger = logging.getLogger(__name__)
 image_processing_semaphore = asyncio.Semaphore(5)
 
 
-@router.post("/process")
+@router.post("/process", dependencies=[Depends(verify_token)])
 async def compare_images(
     file1: UploadFile = File(...),
     file2: UploadFile = File(...),

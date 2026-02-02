@@ -95,9 +95,14 @@ const ChatPage = () => {
         abortControllerRef.current = new AbortController();
         let accumulatedAnswer = "";
 
+        const token = sessionStorage.getItem('authToken');
+        
         await fetchEventSource(getFastApiUrl('/agent-messages'), {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Token ${token}`
+          },
           body: JSON.stringify({ agentId: selectedAgentId, contents: [text], isStream: true, isRagOn: true }),
           signal: abortControllerRef.current.signal,
           onmessage(ev) {

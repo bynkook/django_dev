@@ -91,7 +91,11 @@ const ImageComparePage = () => {
         page2: p2
       });
       
-      // Store result in cache
+      // Store result in cache (Limit to 5 items to prevent memory leaks)
+      if (resultCache.current.size >= 5) {
+        const firstKey = resultCache.current.keys().next().value;
+        resultCache.current.delete(firstKey);
+      }
       resultCache.current.set(cacheKey, result);
 
       setResultData(result);
