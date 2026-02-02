@@ -3,7 +3,7 @@ FastAPI Router: Chat (FabriX Agent)
 FabriX AI 에이전트와의 채팅 엔드포인트
 """
 
-from fastapi import APIRouter, Request, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, Request, UploadFile, File, Form, HTTPException, Depends
 from sse_starlette.sse import EventSourceResponse
 from pydantic import BaseModel
 from typing import List
@@ -13,6 +13,7 @@ import asyncio
 import logging
 
 from ..services.rate_limiter import rate_limiter
+from ..dependencies import verify_token
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -81,7 +82,7 @@ async def get_agents(request: Request, page: int = 1, limit: int = 50):
         raise HTTPException(status_code=500, detail="Failed to fetch agents")
 
 
-@router.post("")
+@router.post("", dependencies=[Depends(verify_token)])
 async def chat_stream(req: ChatRequest, request: Request):
     """
     [POST] /agent-messages
@@ -165,7 +166,7 @@ async def chat_stream(req: ChatRequest, request: Request):
     return EventSourceResponse(event_generator())
 
 
-@router.post("/file")
+@router.post("/file", dependencies=[Depends(verify_token)])
 async def chat_with_file(
     request: Request,
     file: UploadFile = File(...),
