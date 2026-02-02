@@ -1,6 +1,7 @@
 """
 FastAPI Services Package
 """
-from .image_processor import ImageProcessor
+from . import image_processor
+from . import rate_limiter
 
-__all__ = ["ImageProcessor"]
+__all__ = ["image_processor", "rate_limiter"]
