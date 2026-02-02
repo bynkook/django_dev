@@ -30,6 +30,9 @@ echo.
 echo [2/3] DB 테이블 생성 (Migrate)...
 :: 혹시 모를 마이그레이션 충돌 방지를 위해 앱 지정
 python manage.py makemigrations fabrix_agent_chat
+python manage.py makemigrations authentication
+python manage.py makemigrations core
+python manage.py makemigrations image_inspector
 python manage.py migrate
 
 :: 5. 관리자 계정 생성

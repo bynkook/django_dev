@@ -13,7 +13,7 @@ import toml
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import health, chat, image
+from .routers import health_router, chat_router, image_router
 
 # Logging 설정
 logging.basicConfig(level=logging.INFO)
@@ -65,9 +65,10 @@ app.add_middleware(
 )
 
 # 라우터 등록
-app.include_router(health.router, prefix="/health", tags=["Health"])
-app.include_router(chat.router, prefix="/agent-messages", tags=["Chat"])
-app.include_router(image.router, prefix="/image-compare", tags=["Image"])
+# 라우터 등록
+app.include_router(health_router, prefix="/health", tags=["Health"])
+app.include_router(chat_router, prefix="/agent-messages", tags=["FabriX Agent"])
+app.include_router(image_router, prefix="/image-compare", tags=["Image"])
 
 
 @app.get("/")

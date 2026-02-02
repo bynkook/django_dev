@@ -40,5 +40,10 @@ echo   [앱 접속 주소]
 echo   * Chat 앱: http://localhost:5173/chat
 echo   * Image Inspector: http://localhost:5173/image-compare
 echo   * 앱 선택화면: http://localhost:5173
+echo.
+echo   [Django API 엔드포인트]
+echo   - /api/auth/ (인증)
+echo   - /api/chat/ (채팅 세션/메시지)
+echo   - /api/image-inspector/ (상태 확인)
 echo ========================================================
 pause
