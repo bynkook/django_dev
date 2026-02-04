@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 # Configuration variables for file size limits
 MAX_FILE_SIZE_MB = 500  # Maximum file upload size in MB
-MAX_MEMORY_SIZE_MB = 1000  # Maximum memory size for data processing in MB
+MAX_MEMORY_SIZE_MB = 2000  # Maximum memory size for data processing in MB
 
 
 def get_field_metadata(df):
@@ -74,8 +74,8 @@ class GraphicWalkerDataView(APIView):
             )
 
         try:
-            # Read CSV file
-            df = pd.read_csv(file_obj)
+            # Read CSV file with error handling for malformed rows
+            df = pd.read_csv(file_obj, on_bad_lines='skip')
             
             # Check memory usage
             memory_usage_mb = df.memory_usage(deep=True).sum() / (1024 * 1024)
@@ -85,12 +85,13 @@ class GraphicWalkerDataView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # Convert DataFrame to JSON format for Graphic Walker
-            # Graphic Walker expects an array of objects
-            data_json = df.to_dict(orient='records')
-            
-            # Get field metadata for Graphic Walker
+            # Get field metadata for Graphic Walker (before NaN replacement)
             fields = get_field_metadata(df)
+            
+            # Convert DataFrame to JSON using pandas to_json()
+            # This properly handles NaN -> null conversion
+            # orient='records' produces array of objects format for Graphic Walker
+            data_json = json.loads(df.to_json(orient='records'))
             
             return Response({
                 "data": data_json,
@@ -103,41 +104,5 @@ class GraphicWalkerDataView(APIView):
             logger.exception(f"Error processing uploaded file: {e}")
             return Response(
                 {"error": f"Failed to process file: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    def get(self, request, *args, **kwargs):
-        """
-        Load sample data (daily_resource.csv) and return as JSON
-        """
-        try:
-            project_root = settings.BASE_DIR.parent
-            csv_path = project_root / "doc" / "daily_resource.csv"
-
-            if not csv_path.exists():
-                return Response(
-                    {"error": "Default sample data not found."},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-
-            df = pd.read_csv(csv_path)
-            
-            # Convert DataFrame to JSON format for Graphic Walker
-            data_json = df.to_dict(orient='records')
-            
-            # Get field metadata for Graphic Walker
-            fields = get_field_metadata(df)
-            
-            return Response({
-                "data": data_json,
-                "fields": fields,
-                "total_rows": len(df),
-                "filename": "daily_resource.csv (Sample)"
-            }, status=status.HTTP_200_OK)
-
-        except Exception as e:
-            logger.exception(f"Error generating sample view: {e}")
-            return Response(
-                {"error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
