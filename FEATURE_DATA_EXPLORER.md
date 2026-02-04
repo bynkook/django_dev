@@ -31,7 +31,8 @@
 - **컴포넌트**:
     - `DataExplorerSidebar`: 파일 업로드 UI, 샘플 데이터 로드 버튼, 홈 버튼, 축소 버튼
     - `DataExplorerPage`: Graphic Walker React 컴포넌트를 직접 렌더링
-- **라이브러리**: `@kanaries/graphic-walker` (v0.4.80 - React 18 compatible)
+- **라이브러리**: `@kanaries/graphic-walker` (v0.5.0 - React 19 compatible)
+- **React 버전**: React 19
 - **디자인 통합**:
     - 사이드바 헤더에 아이콘, 앱 제목, 홈 버튼, 축소 버튼 배치 (표준화)
     - 사이드바 축소 시 메인 영역에 버튼 공간 확보를 위한 패딩 처리
