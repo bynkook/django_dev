@@ -70,41 +70,16 @@ export const chatApi = {
 };
 
 export const dataExplorerApi = {
-
-  // 샘플 데이터 로드 (GET)
-
-  getSampleData: async () => {
-
-    const response = await djangoClient.get('/api/data-explorer/data/');
-
-    return response.data;
-
-  },
-
-  
-
   // CSV 파일 업로드 및 분석 (POST)
-
   uploadCsv: async (file) => {
-
     const formData = new FormData();
-
     formData.append('file', file);
-
     
-
     const response = await djangoClient.post('/api/data-explorer/data/', formData, {
-
       headers: {
-
         'Content-Type': 'multipart/form-data',
-
       },
-
     });
-
     return response.data;
-
   },
-
 };

@@ -9,6 +9,11 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+    // React 버전 충돌 방지 - 모든 의존성이 동일한 React 인스턴스를 사용하도록 강제
+    dedupe: ['react', 'react-dom'],
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom'],
   },
   server: {
     // 사내망 배포(Service Mode)를 위해 0.0.0.0 개방

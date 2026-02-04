@@ -1,8 +1,8 @@
 import React, { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, BarChart3, LayoutGrid, Menu, ChevronLeft, Home, Database } from 'lucide-react';
+import { Upload, BarChart3, ChevronLeft, Home } from 'lucide-react';
 
-const DataExplorerSidebar = ({ onClose, onFileUpload, onLoadSample, isLoading }) => {
+const DataExplorerSidebar = ({ onClose, onFileUpload, isLoading }) => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
@@ -69,26 +69,6 @@ const DataExplorerSidebar = ({ onClose, onFileUpload, onLoadSample, isLoading })
           onChange={onFileChange} 
           className="hidden" 
         />
-        
-        <button
-          onClick={onLoadSample}
-          disabled={isLoading}
-          className="flex items-center gap-3 w-full p-3 bg-white rounded-xl hover:shadow-md transition-all text-left group disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <div className="p-2 bg-blue-50 text-blue-600 rounded-lg shrink-0 group-hover:bg-blue-100">
-            <Database size={20} />
-          </div>
-          <div>
-            <p className="font-semibold text-sm text-[var(--text-primary)]">Sample Data</p>
-            <p className="text-xs text-[var(--text-secondary)]">Load example dataset</p>
-          </div>
-        </button>
-        
-        <div className="bg-gray-50 p-4 rounded-lg text-xs text-gray-600 space-y-2 border border-gray-100">
-             <p className="font-semibold text-gray-800">💡 About</p>
-             <p>Powered by Graphic Walker - DuckDB based data visualization.</p>
-             <p>Drag and drop fields to create charts and explore your data.</p>
-        </div>
       </div>
     </div>
   );

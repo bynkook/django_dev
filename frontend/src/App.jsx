@@ -1,11 +1,41 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import LoginPage from './features/auth/LoginPage';
-import MainLayout from './components/layout/MainLayout';
-import ChatPage from './features/chat/ChatPage';
-import ImageComparePage from './features/imageCompare/ImageComparePage';
-import DataExplorerPage from './features/dataExplorer/DataExplorerPage';
-import AppSelectorPage from './features/appSelector/AppSelectorPage';
+
+// Lazy loading for code splitting and better performance
+const LoginPage = lazy(() => import('./features/auth/LoginPage'));
+const MainLayout = lazy(() => import('./components/layout/MainLayout'));
+const ChatPage = lazy(() => import('./features/chat/ChatPage'));
+const ImageComparePage = lazy(() => import('./features/imageCompare/ImageComparePage'));
+const DataExplorerPage = lazy(() => import('./features/dataExplorer/DataExplorerPage'));
+const AppSelectorPage = lazy(() => import('./features/appSelector/AppSelectorPage'));
+
+// Error Boundary Component
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('ErrorBoundary caught an error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '20px', color: 'red' }}>
+          <h1>Something went wrong.</h1>
+          <pre>{this.state.error?.toString()}</pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // --- Route Guard ---
 // 토큰이 없으면 로그인 페이지로 리다이렉트시키는 보호 컴포넌트
@@ -22,33 +52,62 @@ const PrivateRoute = ({ children }) => {
   return children;
 };
 
+// Loading fallback component
+const LoadingFallback = () => (
+  <div style={{ 
+    display: 'flex', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    height: '100vh',
+    backgroundColor: 'var(--bg-primary, #ffffff)'
+  }}>
+    <div style={{ textAlign: 'center' }}>
+      <div style={{ 
+        width: '40px', 
+        height: '40px', 
+        border: '3px solid #e5e7eb',
+        borderTopColor: '#3b82f6',
+        borderRadius: '50%',
+        animation: 'spin 1s linear infinite',
+        margin: '0 auto 16px'
+      }} />
+      <p style={{ color: '#6b7280' }}>Loading...</p>
+    </div>
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+  </div>
+);
+
 const App = () => {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public Route: 로그인/회원가입 */}
-        <Route path="/login" element={<LoginPage />} />
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
+            {/* Public Route: 로그인/회원가입 */}
+            <Route path="/login" element={<LoginPage />} />
 
-        {/* Protected Routes: 인증된 사용자만 접근 가능 */}
-        
-        {/* Root - 앱 선택 페이지 */}
-        <Route path="/" element={<PrivateRoute><AppSelectorPage /></PrivateRoute>} />
-        
-        {/* Image Compare - 독립적인 레이아웃 */}
-        <Route path="/image-compare" element={<PrivateRoute><ImageComparePage /></PrivateRoute>} />
-        
-        {/* Chat - MainLayout 사용 */}
-        <Route path="/chat" element={<PrivateRoute><MainLayout /></PrivateRoute>}>
-          <Route index element={<ChatPage />} />
-        </Route>
+            {/* Protected Routes: 인증된 사용자만 접근 가능 */}
+            
+            {/* Root - 앱 선택 페이지 */}
+            <Route path="/" element={<PrivateRoute><AppSelectorPage /></PrivateRoute>} />
+            
+            {/* Image Compare - 독립적인 레이아웃 */}
+            <Route path="/image-compare" element={<PrivateRoute><ImageComparePage /></PrivateRoute>} />
+            
+            {/* Chat - MainLayout 사용 */}
+            <Route path="/chat" element={<PrivateRoute><MainLayout /></PrivateRoute>}>
+              <Route index element={<ChatPage />} />
+            </Route>
 
-        {/* Data Explorer - Standalone Layout */}
-        <Route path="/data-explorer" element={<PrivateRoute><DataExplorerPage /></PrivateRoute>} />
+            {/* Data Explorer - Standalone Layout */}
+            <Route path="/data-explorer" element={<PrivateRoute><DataExplorerPage /></PrivateRoute>} />
 
-        {/* 404: 알 수 없는 경로는 로그인 페이지로 리다이렉트 */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </BrowserRouter>
+            {/* 404: 알 수 없는 경로는 로그인 페이지로 리다이렉트 */}
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 };
 

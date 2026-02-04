@@ -119,9 +119,3 @@ class CustomUserAdmin(BaseUserAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.annotate(session_count_annotated=Count('sessions'))
-
-
-# --- Admin Site 커스터마이징 ---
-admin.site.site_header = "FabriX Agent Chat 관리자"
-admin.site.site_title = "FabriX Admin"
-admin.site.index_title = "관리 대시보드"

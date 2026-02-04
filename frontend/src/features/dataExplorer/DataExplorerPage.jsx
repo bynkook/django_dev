@@ -29,22 +29,6 @@ const DataExplorerPage = () => {
     }
   };
 
-  const handleLoadSample = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await dataExplorerApi.getSampleData();
-      setDataSource(response.data);
-      setFields(response.fields);
-      setFilename(response.filename);
-    } catch (err) {
-      console.error(err);
-      setError("샘플 데이터 로드에 실패했습니다.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="flex h-screen bg-white overflow-hidden">
         {/* Sidebar */}
@@ -54,7 +38,6 @@ const DataExplorerPage = () => {
              <DataExplorerSidebar 
                 onClose={() => setIsSidebarOpen(false)}
                 onFileUpload={handleFileUpload}
-                onLoadSample={handleLoadSample}
                 isLoading={isLoading}
              />
         </div>
@@ -100,7 +83,7 @@ const DataExplorerPage = () => {
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                        <p>왼쪽 사이드바에서 CSV 파일을 업로드하거나 샘플 데이터를 로드하세요.</p>
+                        <p>왼쪽 사이드바에서 CSV 파일을 업로드하세요.</p>
                     </div>
                 )}
             </div>
