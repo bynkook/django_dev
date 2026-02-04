@@ -100,8 +100,12 @@ pygwalker  # Not suitable for web applications
 ### Added
 ```json
 {
-  "@kanaries/graphic-walker": "^0.4.80",  // React 18 compatible
-  "styled-components": "^5.3.6"           // Required peer dependency
+  "@kanaries/graphic-walker": "0.5.0",     // React 19 compatible
+  "styled-components": "^6.1.19",          // Required peer dependency (v6+ for GW 0.5.0)
+  "react": "^19.0.0",                      // React 19
+  "react-dom": "^19.0.0",                  // React DOM 19
+  "lucide-react": "^0.563.0",              // React 19 compatible
+  "react-router-dom": "^7.13.0"            // Updated for React 19
 }
 ```
 

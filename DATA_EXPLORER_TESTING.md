@@ -7,6 +7,7 @@ This guide helps you test the new Graphic Walker-based Data Explorer implementat
 1. Python 3.10+ installed
 2. Node.js 18+ and npm installed
 3. All dependencies installed via `setup_project.bat`
+4. **React 19** and **@kanaries/graphic-walker 0.5.0** installed
 
 ## Quick Start
 
