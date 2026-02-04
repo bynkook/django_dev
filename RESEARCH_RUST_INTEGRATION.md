@@ -1,10 +1,27 @@
 # Research: Rust Integration for Large Data Handling in Data Explorer
 
+## ⚠️ IMPORTANT UPDATE
+
+**See [`RESEARCH_TABLEAU_ARCHITECTURE.md`](RESEARCH_TABLEAU_ARCHITECTURE.md) for critical insights on how BI tools handle large datasets.**
+
+**Key Insight**: PyGWalker is an interactive BI visualization tool that requires the **full dataset** in memory for aggregations, filtering, and plotting - not just pagination. This document originally focused on Rust for CSV parsing, but the real challenge is **analytical query processing** for interactive visualization.
+
+**Revised Recommendation**: Consider **DuckDB** (analytical query engine) as primary solution, with optional Rust for extreme scale (10M+ rows).
+
+---
+
 ## Executive Summary
 
-This document provides a comprehensive analysis of integrating Rust for handling large CSV data files in the existing Django + React + Vite data_explorer application that currently uses PyGWalker and django-pygwalker.
+This document provides a comprehensive analysis of integrating Rust for handling large CSV data files in the existing Django + React + Vite data_explorer application that currently uses PyGWalker.
 
-**RECOMMENDATION**: ✅ **YES - The concept is technically sound and feasible**
+**ORIGINAL RECOMMENDATION**: ✅ Rust microservice for CSV parsing and pagination
+
+**REVISED RECOMMENDATION**: ✅ **DuckDB integration (primary) + Optional Rust (for extreme scale)**
+
+The original analysis focused on CSV parsing performance, but missed the fundamental requirement: PyGWalker needs access to the full dataset for interactive analytics (aggregations, grouping, filtering across all rows). Solutions:
+
+1. **DuckDB** (recommended): Analytical query engine in Python, handles 1-10M rows efficiently
+2. **Rust + DuckDB** (optional): For 10M+ rows, move DuckDB to Rust microservice
 
 Integrating Rust for data processing while keeping the existing Django+React+Vite frontend is a proven architecture pattern that can significantly improve performance and memory efficiency for large dataset handling.
 
@@ -58,7 +75,7 @@ Based on the code in `/django_server/apps/data_explorer/views.py`:
 #### Memory Efficiency
 - **No Garbage Collection**: Deterministic memory management
 - **Zero-Copy Operations**: Can process data without allocations
-- **Memory Safety**: Compiler prevents memory leaks and buffer overflows
+- **Memory Safety**: In safe Rust, the compiler prevents common bugs such as use-after-free, double free, and data races; memory leaks are still possible but are more controlled and easier to reason about
 - **Efficient String Handling**: Lower memory overhead than Python
 
 #### Data Processing Ecosystem

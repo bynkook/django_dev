@@ -2,7 +2,13 @@
 
 ## 📋 Quick Navigation
 
-This folder contains comprehensive research on integrating Rust to handle large CSV data in the `data_explorer` app.
+This repository contains comprehensive research on integrating Rust to handle large CSV data in the `data_explorer` app.
+
+## ⚠️ CRITICAL UPDATE
+
+**NEW**: [`RESEARCH_TABLEAU_ARCHITECTURE.md`](RESEARCH_TABLEAU_ARCHITECTURE.md) - How commercial BI tools handle 1M+ rows
+
+**Key Finding**: PyGWalker needs full dataset access for interactive analytics, not just pagination. Primary solution: **DuckDB** (analytical query engine), with optional Rust for extreme scale.
 
 ---
 

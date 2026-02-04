@@ -158,7 +158,7 @@ Best for: Production use, team development
 ```
 Pros:
 ✅ No network overhead
-✅ Simple deployment (single binary)
+✅ Simpler deployment than separate service (ship wheels per platform/Python)
 ✅ Tight integration
 
 Cons:
@@ -251,11 +251,11 @@ Week 3: Frontend + Polish
 ```toml
 # Minimum viable stack
 [dependencies]
-axum = "0.7"              # Web framework
-tokio = "1"               # Async runtime
-polars = "0.36"           # DataFrame processing
-serde_json = "1.0"        # JSON serialization
-tower-http = "0.5"        # CORS, logging middleware
+axum = "0.7"                                      # Web framework
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }  # Async runtime
+polars = "0.36"                                   # DataFrame processing
+serde_json = "1.0"                                # JSON serialization
+tower-http = "0.5"                                # CORS, logging middleware
 ```
 
 ### Why These?
@@ -323,31 +323,43 @@ Answer these questions:
 ### Setup Rust Project
 
 ```bash
-# Install Rust (if not installed)
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+# Install Rust following official instructions:
+# https://www.rust-lang.org/tools/install
+#
+# On Unix-like systems (recommended secure approach):
+# 1. Download the installer
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o rustup-init.sh
+# 2. Review the script (optional but recommended)
+# less rustup-init.sh
+# 3. Run the installer
+sh rustup-init.sh
+# 4. Clean up
+rm rustup-init.sh
+#
+# Alternative: Use your package manager (e.g., apt, brew, pacman)
 
 # Create project
 cargo new data_processor --bin
 cd data_processor
 
 # Add dependencies
-cargo add axum tokio polars serde serde_json tower-http
+cargo add axum tokio --features tokio/macros,tokio/rt-multi-thread
+cargo add polars serde serde_json tower-http
 ```
 
 ### Hello World API
 
 ```rust
 use axum::{routing::get, Router};
+use tokio::net::TcpListener;
 
 #[tokio::main]
 async fn main() {
     let app = Router::new()
         .route("/health", get(|| async { "OK" }));
     
-    axum::Server::bind(&"0.0.0.0:8002".parse().unwrap())
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+    let listener = TcpListener::bind("0.0.0.0:8002").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
 ```
 

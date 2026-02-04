@@ -1,10 +1,18 @@
 # Executive Summary: Rust Integration for Data Explorer
 
-## Quick Answer
+## ⚠️ CRITICAL UPDATE - READ THIS FIRST
 
-**Question**: Can we develop a Rust application to handle large CSV data on the same server as Django+React+Vite?
+**New Research**: [`RESEARCH_TABLEAU_ARCHITECTURE.md`](RESEARCH_TABLEAU_ARCHITECTURE.md) reveals a fundamental insight about how BI tools work.
 
-**Answer**: ✅ **YES - This is an excellent idea and technically sound.**
+**Original Question**: Can we develop a Rust application to handle large CSV data on the same server as Django+React+Vite?
+
+**Short Answer**: ✅ **YES - But you need an analytical query engine (like DuckDB), not just faster CSV parsing.**
+
+**Key Insight**: PyGWalker is an interactive BI tool that needs the **full dataset** for aggregations and visualization, not just pagination. Rust can help, but the real solution is using an analytical database like DuckDB.
+
+**Revised Recommendation**: 
+1. **Primary**: DuckDB integration (handles 1-10M rows in Python)
+2. **Optional**: Add Rust for extreme scale (10M+ rows)
 
 ---
 
