@@ -35,12 +35,13 @@ graph TD
 - `docs/`: 기술 설계 및 가이드 문서
 
 ## 5. 설치 및 실행 (Windows)
-1. **초기 설정**: `setup_project.bat` 실행 (가상환경 생성, 의존성 설치, DB 마이그레이션)
+1. **초기 설정**: `setup_project.bat` 실행 (가상환경 생성, 의존성 설치)
 2. **비밀 설정**: `secrets.toml` 생성 및 API Key/Secret Key 설정
-3. **실행**: 
+3. **DB 초기화**: `reset_create_admin.bat` 실행 (DB 생성 및 superuser 생성)
+   - **중요**: 이 단계를 건너뛰면 브라우저에 흰 화면만 표시됩니다
+4. **실행**: 
    - 개발 모드: `run_project.bat` (localhost 접속)
    - 서비스 모드: `service_project.bat` (사내망 IP 노출)
-4. **관리자**: `reset_create_admin.bat`으로 superuser 생성
 
 ## 6. 주요 기능 및 성능 개선
 - **Modular Apps**: 인증, 코어, 채팅, 이미지 분석 기능을 독립적인 Django App으로 분리하여 확장성 확보
