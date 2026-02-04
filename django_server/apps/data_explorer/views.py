@@ -14,6 +14,38 @@ logger = logging.getLogger(__name__)
 MAX_FILE_SIZE_MB = 500  # Maximum file upload size in MB
 MAX_MEMORY_SIZE_MB = 1000  # Maximum memory size for data processing in MB
 
+
+def get_field_metadata(df):
+    """
+    Generate field metadata for Graphic Walker from DataFrame columns
+    
+    Args:
+        df: pandas DataFrame
+        
+    Returns:
+        list: Field metadata objects with fid, name, semanticType, and analyticType
+    """
+    fields = []
+    for col in df.columns:
+        dtype = str(df[col].dtype)
+        if dtype in ['int64', 'float64', 'int32', 'float32']:
+            field_type = 'quantitative'
+        elif dtype == 'object':
+            field_type = 'nominal'
+        elif 'datetime' in dtype:
+            field_type = 'temporal'
+        else:
+            field_type = 'nominal'
+        
+        fields.append({
+            'fid': col,
+            'name': col,
+            'semanticType': field_type,
+            'analyticType': 'dimension' if field_type == 'nominal' else 'measure'
+        })
+    return fields
+
+
 class GraphicWalkerDataView(APIView):
     """
     Graphic Walker data API View
@@ -58,24 +90,7 @@ class GraphicWalkerDataView(APIView):
             data_json = df.to_dict(orient='records')
             
             # Get field metadata for Graphic Walker
-            fields = []
-            for col in df.columns:
-                dtype = str(df[col].dtype)
-                if dtype in ['int64', 'float64', 'int32', 'float32']:
-                    field_type = 'quantitative'
-                elif dtype == 'object':
-                    field_type = 'nominal'
-                elif 'datetime' in dtype:
-                    field_type = 'temporal'
-                else:
-                    field_type = 'nominal'
-                
-                fields.append({
-                    'fid': col,
-                    'name': col,
-                    'semanticType': field_type,
-                    'analyticType': 'dimension' if field_type == 'nominal' else 'measure'
-                })
+            fields = get_field_metadata(df)
             
             return Response({
                 "data": data_json,
@@ -111,24 +126,7 @@ class GraphicWalkerDataView(APIView):
             data_json = df.to_dict(orient='records')
             
             # Get field metadata for Graphic Walker
-            fields = []
-            for col in df.columns:
-                dtype = str(df[col].dtype)
-                if dtype in ['int64', 'float64', 'int32', 'float32']:
-                    field_type = 'quantitative'
-                elif dtype == 'object':
-                    field_type = 'nominal'
-                elif 'datetime' in dtype:
-                    field_type = 'temporal'
-                else:
-                    field_type = 'nominal'
-                
-                fields.append({
-                    'fid': col,
-                    'name': col,
-                    'semanticType': field_type,
-                    'analyticType': 'dimension' if field_type == 'nominal' else 'measure'
-                })
+            fields = get_field_metadata(df)
             
             return Response({
                 "data": data_json,
