@@ -1,24 +1,45 @@
 import React, { useState } from 'react';
 import { Menu, AlertCircle } from 'lucide-react';
+import { GraphicWalker } from '@kanaries/graphic-walker';
 import DataExplorerSidebar from './components/DataExplorerSidebar';
 import { dataExplorerApi } from '../../api/djangoApi';
 
 const DataExplorerPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [walkerHtml, setWalkerHtml] = useState(null);
+  const [dataSource, setDataSource] = useState([]);
+  const [fields, setFields] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [filename, setFilename] = useState(null);
 
   const handleFileUpload = async (file) => {
     if (!file) return;
     setIsLoading(true);
     setError(null);
     try {
-      const data = await dataExplorerApi.uploadCsv(file);
-      setWalkerHtml(data.html);
+      const response = await dataExplorerApi.uploadCsv(file);
+      setDataSource(response.data);
+      setFields(response.fields);
+      setFilename(response.filename);
     } catch (err) {
       console.error(err);
       setError("파일 업로드 및 분석에 실패했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLoadSample = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await dataExplorerApi.getSampleData();
+      setDataSource(response.data);
+      setFields(response.fields);
+      setFilename(response.filename);
+    } catch (err) {
+      console.error(err);
+      setError("샘플 데이터 로드에 실패했습니다.");
     } finally {
       setIsLoading(false);
     }
@@ -33,6 +54,7 @@ const DataExplorerPage = () => {
              <DataExplorerSidebar 
                 onClose={() => setIsSidebarOpen(false)}
                 onFileUpload={handleFileUpload}
+                onLoadSample={handleLoadSample}
                 isLoading={isLoading}
              />
         </div>
@@ -63,18 +85,22 @@ const DataExplorerPage = () => {
                 </div>
             )}
 
-            {/* Iframe Area */}
-            <div className="flex-1 w-full h-full relative">
-                {walkerHtml ? (
-                    <iframe
-                        srcDoc={walkerHtml}
-                        style={{ width: '100%', height: '100%', border: 'none' }}
-                        title="Data Explorer"
-                        sandbox="allow-scripts allow-same-origin allow-popups"
-                    />
+            {/* Graphic Walker Area */}
+            <div className="flex-1 w-full h-full relative overflow-auto">
+                {dataSource.length > 0 && fields.length > 0 ? (
+                    <div className="w-full h-full p-4">
+                        <div className="mb-2 text-sm text-gray-600">
+                            <span className="font-semibold">{filename}</span> - {dataSource.length} rows
+                        </div>
+                        <GraphicWalker
+                            data={dataSource}
+                            fields={fields}
+                            appearance="light"
+                        />
+                    </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                        <p>왼쪽 사이드바에서 CSV 파일을 업로드하여 분석을 시작하세요.</p>
+                        <p>왼쪽 사이드바에서 CSV 파일을 업로드하거나 샘플 데이터를 로드하세요.</p>
                     </div>
                 )}
             </div>

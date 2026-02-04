@@ -73,9 +73,9 @@ export const dataExplorerApi = {
 
   // 샘플 데이터 로드 (GET)
 
-  getSampleHtml: async () => {
+  getSampleData: async () => {
 
-    const response = await djangoClient.get('/api/data-explorer/html/');
+    const response = await djangoClient.get('/api/data-explorer/data/');
 
     return response.data;
 
@@ -93,7 +93,7 @@ export const dataExplorerApi = {
 
     
 
-    const response = await djangoClient.post('/api/data-explorer/html/', formData, {
+    const response = await djangoClient.post('/api/data-explorer/data/', formData, {
 
       headers: {
 

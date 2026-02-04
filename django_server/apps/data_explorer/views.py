@@ -1,30 +1,30 @@
-import os
-# PyGWalker가 서버를 띄우거나 브라우저를 여는 것을 방지 (임포트 전 설정)
-os.environ["PYGWALKER_NO_BROWSER"] = "1"
-os.environ["PYGWALKER_USE_KERNEL"] = "0"
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.conf import settings
 import pandas as pd
-import pygwalker as pyg
+import json
 
 import logging
 
 logger = logging.getLogger(__name__)
 
-class PygWalkerHTMLView(APIView):
+# Configuration variables for file size limits
+MAX_FILE_SIZE_MB = 500  # Maximum file upload size in MB
+MAX_MEMORY_SIZE_MB = 1000  # Maximum memory size for data processing in MB
+
+class GraphicWalkerDataView(APIView):
     """
-    PygWalker HTML을 생성하여 반환하는 API View
+    Graphic Walker data API View
+    Returns CSV data as JSON for Graphic Walker visualization
     """
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request, *args, **kwargs):
         """
-        업로드된 CSV 파일을 읽어 PyGWalker HTML을 반환
+        Upload CSV file and return data as JSON for Graphic Walker
         """
         file_obj = request.FILES.get('file')
         if not file_obj:
@@ -33,26 +33,53 @@ class PygWalkerHTMLView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # Check file size limit
+        file_size_mb = file_obj.size / (1024 * 1024)
+        if file_size_mb > MAX_FILE_SIZE_MB:
+            return Response(
+                {"error": f"File size exceeds maximum limit of {MAX_FILE_SIZE_MB}MB"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         try:
-            # CSV 파일 읽기
-            # pandas는 파일 객체를 직접 읽을 수 있음
+            # Read CSV file
             df = pd.read_csv(file_obj)
             
-            # PyGWalker HTML 생성 (커널 서버 실행 방지 및 순수 HTML 출력)
-            # appearance='light'와 함께 theme_key='vega'를 사용하여 밝은 테마 시각화를 강제합니다.
-            # dark='light'와 theme='light'는 다양한 라이브러리 버전 호환성을 위해 추가되었습니다.
-            walker_html = pyg.to_html(
-                df, 
-                use_kernel=False, 
-                env='gradio', 
-                appearance='light', 
-                theme_key='vega',
-                dark='light',
-                theme='light'
-            )
+            # Check memory usage
+            memory_usage_mb = df.memory_usage(deep=True).sum() / (1024 * 1024)
+            if memory_usage_mb > MAX_MEMORY_SIZE_MB:
+                return Response(
+                    {"error": f"Data size exceeds maximum memory limit of {MAX_MEMORY_SIZE_MB}MB"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Convert DataFrame to JSON format for Graphic Walker
+            # Graphic Walker expects an array of objects
+            data_json = df.to_dict(orient='records')
+            
+            # Get field metadata for Graphic Walker
+            fields = []
+            for col in df.columns:
+                dtype = str(df[col].dtype)
+                if dtype in ['int64', 'float64', 'int32', 'float32']:
+                    field_type = 'quantitative'
+                elif dtype == 'object':
+                    field_type = 'nominal'
+                elif 'datetime' in dtype:
+                    field_type = 'temporal'
+                else:
+                    field_type = 'nominal'
+                
+                fields.append({
+                    'fid': col,
+                    'name': col,
+                    'semanticType': field_type,
+                    'analyticType': 'dimension' if field_type == 'nominal' else 'measure'
+                })
             
             return Response({
-                "html": walker_html,
+                "data": data_json,
+                "fields": fields,
                 "total_rows": len(df),
                 "filename": file_obj.name
             }, status=status.HTTP_200_OK)
@@ -66,33 +93,46 @@ class PygWalkerHTMLView(APIView):
 
     def get(self, request, *args, **kwargs):
         """
-        기본 샘플 데이터(daily_resource.csv)로 HTML 반환 (테스트용)
+        Load sample data (daily_resource.csv) and return as JSON
         """
         try:
             project_root = settings.BASE_DIR.parent
             csv_path = project_root / "doc" / "daily_resource.csv"
 
-            if not os.path.exists(csv_path):
+            if not csv_path.exists():
                 return Response(
                     {"error": "Default sample data not found."},
                     status=status.HTTP_404_NOT_FOUND
                 )
 
             df = pd.read_csv(csv_path)
-            # 샘플 데이터도 동일하게 순수 HTML만 생성하도록 수정
-            # appearance='light', theme_key='vega', dark='light' 옵션을 사용하여 밝은 테마를 강제합니다.
-            walker_html = pyg.to_html(
-                df, 
-                use_kernel=False, 
-                env='gradio', 
-                appearance='light', 
-                theme_key='vega',
-                dark='light',
-                theme='light'
-            )
+            
+            # Convert DataFrame to JSON format for Graphic Walker
+            data_json = df.to_dict(orient='records')
+            
+            # Get field metadata for Graphic Walker
+            fields = []
+            for col in df.columns:
+                dtype = str(df[col].dtype)
+                if dtype in ['int64', 'float64', 'int32', 'float32']:
+                    field_type = 'quantitative'
+                elif dtype == 'object':
+                    field_type = 'nominal'
+                elif 'datetime' in dtype:
+                    field_type = 'temporal'
+                else:
+                    field_type = 'nominal'
+                
+                fields.append({
+                    'fid': col,
+                    'name': col,
+                    'semanticType': field_type,
+                    'analyticType': 'dimension' if field_type == 'nominal' else 'measure'
+                })
             
             return Response({
-                "html": walker_html,
+                "data": data_json,
+                "fields": fields,
                 "total_rows": len(df),
                 "filename": "daily_resource.csv (Sample)"
             }, status=status.HTTP_200_OK)

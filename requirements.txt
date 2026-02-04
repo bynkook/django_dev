@@ -22,5 +22,4 @@ numpy
 
 # Data Analysis & Visualization
 pandas
-pygwalker
 python-dotenv

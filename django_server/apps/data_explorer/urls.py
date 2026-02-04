@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import PygWalkerHTMLView
+from .views import GraphicWalkerDataView
 
 urlpatterns = [
-    path('html/', PygWalkerHTMLView.as_view(), name='pygwalker-html'),
+    path('data/', GraphicWalkerDataView.as_view(), name='graphic-walker-data'),
 ]
