@@ -11,8 +11,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Configuration variables for file size limits
-MAX_FILE_SIZE_MB = 500  # Maximum file upload size in MB
-MAX_MEMORY_SIZE_MB = 2000  # Maximum memory size for data processing in MB
+MAX_FILE_SIZE_MB = 100  # Maximum file upload size in MB
+MAX_MEMORY_SIZE_MB = 10000  # Maximum memory size for data processing in MB
 
 
 def get_field_metadata(df):
