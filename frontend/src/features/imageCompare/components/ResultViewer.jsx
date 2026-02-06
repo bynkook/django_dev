@@ -1,8 +1,16 @@
 import React, { useRef, useEffect } from 'react';
 import { Download, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 
-const ResultViewer = ({ resultData, onDownload }) => {
+const ResultViewer = ({ resultData, onDownload, colors }) => {
   const containerRef = useRef(null);
+
+  // Default colors (Fallback)
+  const defaultColors = {
+    diff_file1: '#0000FF', // Blue
+    diff_file2: '#FF0000'  // Red
+  };
+  
+  const activeColors = colors || defaultColors;
 
   if (!resultData) {
     return (
@@ -59,7 +67,7 @@ const ResultViewer = ({ resultData, onDownload }) => {
             {/* Left Pane (File 1) */}
             <div className="flex-1 flex flex-col">
               <div className="p-2 flex items-center justify-center gap-2 text-xs font-bold text-gray-400 bg-white sticky top-0 z-10 uppercase">
-                <span className="w-3 h-3 rounded-full bg-blue-500 shadow-sm"></span>
+                <span className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: activeColors.diff_file1 || '#0000FF' }}></span>
                 File 1 (기준)
               </div>
               <div className="flex-1 overflow-auto p-4 flex items-center justify-center">
@@ -74,7 +82,7 @@ const ResultViewer = ({ resultData, onDownload }) => {
             {/* Right Pane (File 2) */}
             <div className="flex-1 flex flex-col border-l border-gray-100">
               <div className="p-2 flex items-center justify-center gap-2 text-xs font-bold text-gray-400 bg-white sticky top-0 z-10 uppercase">
-                <span className="w-3 h-3 rounded-full bg-red-600 shadow-sm"></span>
+                <span className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: activeColors.diff_file2 || '#FF0000' }}></span>
                 File 2 (비교군)
               </div>
               <div className="flex-1 overflow-auto p-4 flex items-center justify-center">

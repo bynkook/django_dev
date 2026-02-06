@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     # Local Apps
     'apps.core',                 # 코어 유틸리티
     'apps.authentication',       # 인증 앱
+    'apps.user_settings',        # 사용자 설정 앱
     'apps.fabrix_agent_chat',    # AI 채팅 앱
     'apps.image_inspector',      # 이미지 비교 앱
     'apps.data_explorer',        # 데이터 분석 앱 (Graphic Walker)

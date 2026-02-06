@@ -238,24 +238,37 @@ def fallback_align(A_bgr: np.ndarray, B_bgr: np.ndarray) -> np.ndarray:
     return canvas
 
 
-def compare_images(A_bgr: np.ndarray, B_aligned_bgr: np.ndarray, diff_thresh: int = 30, bin_thresh: int = 200) -> np.ndarray:
+def hex_to_bgr(hex_color: str) -> Tuple[int, int, int]:
+    """Hex 색상 코드를 BGR 튜플로 변환"""
+    hex_color = hex_color.lstrip('#')
+    rgb = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+    return (rgb[2], rgb[1], rgb[0])  # Convert RGB to BGR
+
+def compare_images(
+    A_bgr: np.ndarray, 
+    B_aligned_bgr: np.ndarray, 
+    diff_thresh: int = 30, 
+    bin_thresh: int = 200,
+    colors: dict = None
+) -> np.ndarray:
     """
     두 이미지 비교 (차이점 강조)
     
-    - A에만 있는 부분 -> 파랑
-    - B에만 있는 부분 -> 빨강
-    - 공통 부분 -> 검정
-    - 배경 -> 흰색
-    
     Args:
-        A_bgr: 첫 번째 이미지
-        B_aligned_bgr: 정렬된 두 번째 이미지
-        diff_thresh: 차이 임계값
-        bin_thresh: 이진화 임계값 (기본 200)
-    
-    Returns:
-        비교 결과 이미지
+        colors: {
+            'diff_file1': '#RRGGBB', 
+            'diff_file2': '#RRGGBB', 
+            'diff_common': '#RRGGBB'
+        }
     """
+    # Default colors if not provided
+    if colors is None:
+        colors = {}
+    
+    c_file1 = hex_to_bgr(colors.get('diff_file1', '#0000FF')) # Blue default
+    c_file2 = hex_to_bgr(colors.get('diff_file2', '#FF0000')) # Red default
+    c_common = hex_to_bgr(colors.get('diff_common', '#000000')) # Black default
+
     h, w = A_bgr.shape[:2]
     
     A_gray = cv2.cvtColor(A_bgr, cv2.COLOR_BGR2GRAY)
@@ -280,28 +293,35 @@ def compare_images(A_bgr: np.ndarray, B_aligned_bgr: np.ndarray, diff_thresh: in
     both = np.logical_and(both > 0, ~diff_mask.astype(bool))
     
     result = np.full((h, w, 3), 255, dtype=np.uint8)
-    result[both] = [0, 0, 0]
-    result[only_A] = [255, 0, 0]
-    result[only_B] = [0, 0, 255]
+    result[both] = c_common
+    result[only_A] = c_file1
+    result[only_B] = c_file2
     
     return result
 
 
-def compare_images_overlay(A_bgr: np.ndarray, B_aligned_bgr: np.ndarray, bin_thresh: int = 200) -> np.ndarray:
+def compare_images_overlay(
+    A_bgr: np.ndarray, 
+    B_aligned_bgr: np.ndarray, 
+    bin_thresh: int = 200,
+    colors: dict = None
+) -> np.ndarray:
     """
     두 이미지 오버레이 (겹치기)
     
-    - A (1번 도면) -> 주황색
-    - B (2번 도면) -> 초록색
-    
     Args:
-        A_bgr: 첫 번째 이미지
-        B_aligned_bgr: 정렬된 두 번째 이미지
-        bin_thresh: 이진화 임계값 (기본 200)
-    
-    Returns:
-        오버레이 결과 이미지
+        colors: {
+            'overlay_file1': '#RRGGBB',
+            'overlay_file2': '#RRGGBB'
+        }
     """
+    # Default colors
+    if colors is None:
+        colors = {}
+        
+    c_file1 = hex_to_bgr(colors.get('overlay_file1', '#FFA500')) # Orange default
+    c_file2 = hex_to_bgr(colors.get('overlay_file2', '#00FF00')) # Green default
+
     h, w = A_bgr.shape[:2]
     
     A_gray = cv2.cvtColor(A_bgr, cv2.COLOR_BGR2GRAY)
@@ -312,11 +332,8 @@ def compare_images_overlay(A_bgr: np.ndarray, B_aligned_bgr: np.ndarray, bin_thr
     
     result = np.full((h, w, 3), 255, dtype=np.uint8)
     
-    # A: 주황색 (BGR: 0, 165, 255)
-    result[A_bin > 0] = [0, 165, 255]
-    
-    # B: 초록색 (BGR: 0, 255, 0)
-    result[B_bin > 0] = [0, 255, 0]
+    result[A_bin > 0] = c_file1
+    result[B_bin > 0] = c_file2
     
     return result
 
@@ -345,11 +362,31 @@ def encode_image_to_base64(img: np.ndarray, format: str = 'JPEG', quality: int =
     return f"data:{mime_type};base64,{base64_str}"
 
 
-def generate_highlighted_images(A_bgr: np.ndarray, B_aligned_bgr: np.ndarray, diff_thresh: int = 30, bin_thresh: int = 200) -> Tuple[np.ndarray, np.ndarray]:
+def generate_highlighted_images(
+    A_bgr: np.ndarray, 
+    B_aligned_bgr: np.ndarray, 
+    diff_thresh: int = 30, 
+    bin_thresh: int = 200,
+    colors: dict = None
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     각 이미지에 차이점 강조 (Side-by-Side 뷰용)
     A에는 A만의 특징(삭제됨)을, B에는 B만의 특징(추가됨)을 강조
+    
+    Args:
+        colors: {
+            'diff_file1': '#RRGGBB', 
+            'diff_file2': '#RRGGBB',
+            'diff_common': '#RRGGBB'
+        }
     """
+    if colors is None:
+        colors = {}
+        
+    c_file1 = hex_to_bgr(colors.get('diff_file1', '#0000FF')) # Blue default
+    c_file2 = hex_to_bgr(colors.get('diff_file2', '#FF0000')) # Red default
+    c_common = hex_to_bgr(colors.get('diff_common', '#000000')) # Black default
+
     h, w = A_bgr.shape[:2]
     
     A_gray = cv2.cvtColor(A_bgr, cv2.COLOR_BGR2GRAY)
@@ -373,19 +410,18 @@ def generate_highlighted_images(A_bgr: np.ndarray, B_aligned_bgr: np.ndarray, di
     
     only_A = np.logical_or(only_A > 0, darker_in_A)
     only_B = np.logical_or(only_B > 0, darker_in_B)
+    # 공통 영역 (차이가 없는 부분)
+    both_no_diff = np.logical_and(both > 0, ~diff_mask.astype(bool))
 
-    # Image A Highlighted (Blue for missing/changed)
-    # 원본 이미지를 흐리게 하고 차이 부분만 강조
-    imgA_out = A_bgr.copy()
-    # 배경 흐리게
-    # imgA_out = cv2.addWeighted(imgA_out, 0.7, np.full_like(imgA_out, 255), 0.3, 0)
-    # 강조 (Blue)
-    imgA_out[only_A] = [255, 0, 0] # Blue
+    # Image A Highlighted
+    imgA_out = np.full((h, w, 3), 255, dtype=np.uint8) # 배경을 흰색으로 초기화 (원본 유지보다 색상 지정이 정확함)
+    imgA_out[both_no_diff] = c_common
+    imgA_out[only_A] = c_file1 
     
-    # Image B Highlighted (Red for added/changed)
-    imgB_out = B_aligned_bgr.copy()
-    # imgB_out = cv2.addWeighted(imgB_out, 0.7, np.full_like(imgB_out, 255), 0.3, 0)
-    imgB_out[only_B] = [0, 0, 255] # Red
+    # Image B Highlighted
+    imgB_out = np.full((h, w, 3), 255, dtype=np.uint8)
+    imgB_out[both_no_diff] = c_common
+    imgB_out[only_B] = c_file2
     
     return imgA_out, imgB_out
 
@@ -399,31 +435,15 @@ def process_comparison(
     feature_count: int = 4000,
     page1: int = 0,
     page2: int = 0,
-    bin_threshold: int = 200
+    bin_threshold: int = 200,
+    colors: dict = None
 ) -> dict:
     """
     이미지 비교 전체 파이프라인
     
     Args:
-        file1_bytes: 첫 번째 파일 바이트
-        file1_type: 첫 번째 파일 MIME 타입
-        file2_bytes: 두 번째 파일 바이트
-        file2_type: 두 번째 파일 MIME 타입
-        mode: 'difference' 또는 'overlay'
-        diff_threshold: 차이 임계값
-        feature_count: ORB 특징점 개수
-        page1: PDF 페이지 번호 (file1)
-        page2: PDF 페이지 번호 (file2)
-        bin_threshold: 이진화 임계값 (기본 200)
-    
-    Returns:
-        {
-            "result_base64": str (JPEG 압축, 화면 표시용),
-            "file1_base64": str,
-            "file2_base64": str,
-            "download_base64": str (PNG 고품질, 다운로드용),
-            "metadata": dict
-        }
+        ...
+        colors: 색상 설정 딕셔너리
     """
     try:
         # 1. 파일 로드
@@ -453,12 +473,14 @@ def process_comparison(
         file2_result = aligned_img2
 
         if mode == "overlay":
-            result = compare_images_overlay(img1, aligned_img2, bin_thresh=bin_threshold)
+            result = compare_images_overlay(img1, aligned_img2, bin_thresh=bin_threshold, colors=colors)
             # Overlay 모드에서는 원본(정렬된) 그냥 반환
         else:  # difference
-            result = compare_images(img1, aligned_img2, diff_thresh=diff_threshold, bin_thresh=bin_threshold)
+            result = compare_images(img1, aligned_img2, diff_thresh=diff_threshold, bin_thresh=bin_threshold, colors=colors)
             # Difference 모드에서는 하이라이트된 개별 이미지 생성
-            file1_result, file2_result = generate_highlighted_images(img1, aligned_img2, diff_thresh=diff_threshold, bin_thresh=bin_threshold)
+            file1_result, file2_result = generate_highlighted_images(
+                img1, aligned_img2, diff_thresh=diff_threshold, bin_thresh=bin_threshold, colors=colors
+            )
         
         # 5. 인코딩
         logger.info("이미지 인코딩 중...")

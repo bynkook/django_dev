@@ -83,3 +83,19 @@ export const dataExplorerApi = {
     return response.data;
   },
 };
+
+export const settingsApi = {
+  // 사용자 설정 조회
+  getSettings: async () => {
+    const response = await djangoClient.get('/api/settings/');
+    return response.data;
+  },
+  
+  // 사용자 설정 업데이트 (Partial Update)
+  updateSettings: async (settings) => {
+    const response = await djangoClient.patch('/api/settings/', {
+      preferences: settings
+    });
+    return response.data;
+  },
+};

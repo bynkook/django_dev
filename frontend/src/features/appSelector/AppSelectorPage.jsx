@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageCircle, ImageIcon, Bot, ChevronRight, BarChart3 } from 'lucide-react';
+import { MessageCircle, ImageIcon, Bot, ChevronRight, BarChart3, Settings } from 'lucide-react';
 
 const AppSelectorPage = () => {
   const navigate = useNavigate();
@@ -48,7 +48,16 @@ const AppSelectorPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
-      <div className="max-w-3xl w-full">
+      <div className="max-w-3xl w-full relative">
+        {/* Settings Button (Top Right) */}
+        <button
+          onClick={() => navigate('/settings')}
+          className="absolute top-0 right-0 p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-full transition-all"
+          title="환경 설정"
+        >
+          <Settings size={24} />
+        </button>
+
         {/* Header */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 mb-4 shadow-lg">

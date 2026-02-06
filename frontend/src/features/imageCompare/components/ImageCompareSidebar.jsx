@@ -21,6 +21,7 @@ const ImageCompareSidebar = ({
   // Props for Settings
   settings,
   setSettings,
+  colors,
   // Props for Compare
   handleCompare,
   canCompare,
@@ -108,6 +109,7 @@ const ImageCompareSidebar = ({
           <SettingsPanel
             settings={settings}
             onSettingsChange={setSettings}
+            colors={colors}
           />
         </div>
         

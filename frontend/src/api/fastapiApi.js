@@ -25,9 +25,12 @@ export const fastApi = {
   },
 
   // 이미지 비교 요청
-  // params: { file1, file2, mode, diffThreshold, featureCount, page1, page2 }
+  // params: { file1, file2, mode, diffThreshold, featureCount, page1, page2, colors }
   compareImages: async (params) => {
-    const { file1, file2, mode, diffThreshold, featureCount, page1, page2 } = params;
+    const { 
+      file1, file2, mode, diffThreshold, featureCount, page1, page2, 
+      colors // { diff_file1, diff_file2, diff_common, overlay_file1, overlay_file2 }
+    } = params;
     
     const formData = new FormData();
     formData.append('file1', file1);
@@ -37,6 +40,15 @@ export const fastApi = {
     formData.append('feature_count', featureCount);
     formData.append('page1', page1);
     formData.append('page2', page2);
+    
+    // 색상 파라미터 추가
+    if (colors) {
+      if (colors.diff_file1) formData.append('color_diff_file1', colors.diff_file1);
+      if (colors.diff_file2) formData.append('color_diff_file2', colors.diff_file2);
+      if (colors.diff_common) formData.append('color_diff_common', colors.diff_common);
+      if (colors.overlay_file1) formData.append('color_overlay_file1', colors.overlay_file1);
+      if (colors.overlay_file2) formData.append('color_overlay_file2', colors.overlay_file2);
+    }
 
     const response = await fastApiClient.post('/image-compare/process', formData, {
       headers: {

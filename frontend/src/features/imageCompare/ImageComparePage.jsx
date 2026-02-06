@@ -1,11 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Menu, AlertCircle, Link, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ImageCompareSidebar from './components/ImageCompareSidebar';
 import ResultViewer from './components/ResultViewer';
 import LoadingOverlay from './components/LoadingOverlay';
 import { fastApi } from '../../api/fastapiApi';
-import { authApi } from '../../api/djangoApi';
+import { authApi, settingsApi } from '../../api/djangoApi';
 
 const ImageComparePage = () => {
   const navigate = useNavigate();
@@ -19,6 +19,24 @@ const ImageComparePage = () => {
   const [resetKey, setResetKey] = useState(0);
   const [isResetHovered, setIsResetHovered] = useState(false);
   const [isSyncNav, setIsSyncNav] = useState(true);
+  
+  // 사용자 설정 (색상 등)
+  const [userSettings, setUserSettings] = useState(null);
+
+  useEffect(() => {
+    // 앱 진입 시 사용자 설정 로드
+    const loadSettings = async () => {
+      try {
+        const data = await settingsApi.getSettings();
+        if (data && data.preferences && data.preferences.image_inspector) {
+          setUserSettings(data.preferences.image_inspector);
+        }
+      } catch (error) {
+        console.error('Failed to load user settings:', error);
+      }
+    };
+    loadSettings();
+  }, []);
   
   // Cache for storing comparison results to avoid re-fetching
   const resultCache = useRef(new Map());
@@ -88,11 +106,12 @@ const ImageComparePage = () => {
         diffThreshold: settings.diffThreshold,
         featureCount: settings.featureCount,
         page1: p1,
-        page2: p2
+        page2: p2,
+        colors: userSettings // 사용자 설정 색상 전달
       });
       
-      // Store result in cache (Limit to 5 items to prevent memory leaks)
-      if (resultCache.current.size >= 5) {
+      // Store result in cache (Limit to 100 items to prevent memory leaks while allowing full document navigation)
+      if (resultCache.current.size >= 100) {
         const firstKey = resultCache.current.keys().next().value;
         resultCache.current.delete(firstKey);
       }
@@ -265,6 +284,7 @@ const ImageComparePage = () => {
         handleFile2Select={handleFile2Select}
         settings={settings}
         setSettings={setSettings}
+        colors={userSettings}
         handleCompare={handleCompare}
         canCompare={canCompare}
         isLoading={isLoading}
@@ -314,6 +334,7 @@ const ImageComparePage = () => {
           <ResultViewer
             resultData={resultData}
             onDownload={handleDownload}
+            colors={userSettings}
           />
         </div>
 

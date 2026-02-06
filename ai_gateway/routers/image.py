@@ -26,29 +26,26 @@ async def compare_images(
     feature_count: int = Form(4000),
     page1: int = Form(0),
     page2: int = Form(0),
-    bin_threshold: int = Form(200)
+    bin_threshold: int = Form(200),
+    # Optional color parameters
+    color_diff_file1: str = Form(None),
+    color_diff_file2: str = Form(None),
+    color_diff_common: str = Form(None),
+    color_overlay_file1: str = Form(None),
+    color_overlay_file2: str = Form(None),
 ):
     """
     [POST] /image-compare/process
     두 이미지/PDF/TIFF를 비교하여 차이점을 시각화합니다.
-    
-    Args:
-        file1: 첫 번째 파일 (이미지, PDF, TIFF)
-        file2: 두 번째 파일 (이미지, PDF, TIFF)
-        mode: 비교 모드 ('difference' 또는 'overlay')
-        diff_threshold: 차이 임계값 (0-255)
-        feature_count: ORB 특징점 개수 (1000-10000)
-        page1: PDF/TIFF 페이지 번호 (0-based)
-        page2: PDF/TIFF 페이지 번호 (0-based)
-        bin_threshold: 이진화 임계값 (0-255)
-    
-    Returns:
-        {
-            "result_base64": str (JPEG, 화면 표시용),
-            "download_base64": str (PNG, 다운로드용),
-            "metadata": dict
-        }
     """
+    # Construct colors dictionary
+    colors = {}
+    if color_diff_file1: colors['diff_file1'] = color_diff_file1
+    if color_diff_file2: colors['diff_file2'] = color_diff_file2
+    if color_diff_common: colors['diff_common'] = color_diff_common
+    if color_overlay_file1: colors['overlay_file1'] = color_overlay_file1
+    if color_overlay_file2: colors['overlay_file2'] = color_overlay_file2
+
     # 파일 크기 제한 (30MB)
     MAX_FILE_SIZE = 30 * 1024 * 1024
     
@@ -110,7 +107,8 @@ async def compare_images(
                 feature_count,
                 page1,
                 page2,
-                bin_threshold
+                bin_threshold,
+                colors # Pass colors dict
             )
             
             logger.info(f"Image comparison completed: {result['metadata']['result_size']}")

@@ -8,6 +8,7 @@ const ChatPage = lazy(() => import('./features/chat/ChatPage'));
 const ImageComparePage = lazy(() => import('./features/imageCompare/ImageComparePage'));
 const DataExplorerPage = lazy(() => import('./features/dataExplorer/DataExplorerPage'));
 const AppSelectorPage = lazy(() => import('./features/appSelector/AppSelectorPage'));
+const SettingsPage = lazy(() => import('./features/settings/SettingsPage'));
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -91,6 +92,9 @@ const App = () => {
             {/* Root - 앱 선택 페이지 */}
             <Route path="/" element={<PrivateRoute><AppSelectorPage /></PrivateRoute>} />
             
+            {/* Settings - 환경 설정 페이지 */}
+            <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
+
             {/* Image Compare - 독립적인 레이아웃 */}
             <Route path="/image-compare" element={<PrivateRoute><ImageComparePage /></PrivateRoute>} />
             

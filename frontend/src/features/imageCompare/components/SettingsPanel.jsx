@@ -1,8 +1,17 @@
 import React from 'react';
 import { Settings } from 'lucide-react';
 
-const SettingsPanel = ({ settings, onSettingsChange }) => {
+const SettingsPanel = ({ settings, onSettingsChange, colors }) => {
   const { mode, diffThreshold, featureCount } = settings;
+
+  // 색상 정보 레이블 생성
+  const getColorLabel = () => {
+    if (mode === 'difference') {
+      return '사용자 정의 색상으로 차이점이 표시됩니다.';
+    } else {
+      return '사용자 정의 색상으로 레이어가 겹쳐서 표시됩니다.';
+    }
+  };
 
   return (
     <div className="p-4 bg-white">
@@ -42,12 +51,35 @@ const SettingsPanel = ({ settings, onSettingsChange }) => {
             오버레이
           </button>
         </div>
-        <p className="text-xs text-gray-500 mt-1">
-          {mode === 'difference' 
-            ? '파랑: 이미지1 빨강: 이미지2, 검정: 공통' 
-            : '주황: 이미지1 초록: 이미지2'
-          }
-        </p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {mode === 'difference' ? (
+            <>
+              <div className="flex items-center gap-1 text-[10px] text-gray-500">
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: colors?.diff_file1 || '#3B82F6' }}></span>
+                파일1
+              </div>
+              <div className="flex items-center gap-1 text-[10px] text-gray-500">
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: colors?.diff_file2 || '#DC2626' }}></span>
+                파일2
+              </div>
+              <div className="flex items-center gap-1 text-[10px] text-gray-500">
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: colors?.diff_common || '#000000' }}></span>
+                공통
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-1 text-[10px] text-gray-500">
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: colors?.overlay_file1 || '#F97316' }}></span>
+                파일1
+              </div>
+              <div className="flex items-center gap-1 text-[10px] text-gray-500">
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: colors?.overlay_file2 || '#22C55E' }}></span>
+                파일2
+              </div>
+            </>
+          )}
+        </div>
       </div>
       
       {/* 차이 임계값 (difference 모드에만 표시) */}
