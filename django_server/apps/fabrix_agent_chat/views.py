@@ -42,23 +42,18 @@ class AgentListView(APIView):
                 # settings에서 공유 HTTP 클라이언트 사용 (연결 재사용)
                 http_client = getattr(settings, 'SHARED_HTTP_CLIENT', None)
                 
+                # Fetch parameters
+                params = {'page': 1, 'limit': 100}
+                
                 if http_client is None:
                     # Fallback: 클라이언트가 없으면 새로 생성
                     with httpx.Client(timeout=15.0) as client:
-                        response = client.get(
-                            target_url,
-                            headers=headers,
-                            params={'page': 1, 'limit': 100}
-                        )
+                        response = client.get(target_url, headers=headers, params=params)
                         response.raise_for_status()
                         return JsonResponse(response.json(), status=response.status_code, safe=False)
                 
                 # 공유 클라이언트 사용
-                response = http_client.get(
-                    target_url,
-                    headers=headers,
-                    params={'page': 1, 'limit': 100}
-                )
+                response = http_client.get(target_url, headers=headers, params=params)
                 response.raise_for_status()
                 return JsonResponse(response.json(), status=response.status_code, safe=False)
                 

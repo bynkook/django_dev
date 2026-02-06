@@ -4,7 +4,7 @@ export const fastApi = {
   // 사용 가능한 FabriX Agent 목록 조회
   getAgents: async () => {
     // page, limit은 필요에 따라 파라미터화 가능 (현재 기본값 사용)
-    const response = await fastApiClient.get('/agents');
+    const response = await fastApiClient.get('/agent-messages/agents');
     return response.data;
   },
 

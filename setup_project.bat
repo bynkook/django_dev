@@ -29,7 +29,7 @@ echo [3/3] Frontend 라이브러리 설치 (npm)...
 cd frontend
 if not exist node_modules (
     echo Installing React 19 and all dependencies...
-    call npm install react@^19.0.0 react-dom@^19.0.0
+    call npm install react@^19.2.0 react-dom@^19.2.0
     call npm install
 ) else (
     echo node_modules가 이미 존재합니다. 추가 설치는 'npm install'을 직접 실행하세요.

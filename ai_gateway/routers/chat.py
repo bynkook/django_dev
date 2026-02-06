@@ -222,10 +222,14 @@ async def chat_with_file(
             'file': (file.filename, file.file, file.content_type)
         }
         
+        # FabriX API expects contents as a list of strings
+        # even for file uploads
+        payload_contents = [contents] if isinstance(contents, str) else contents
+        
         data = {
             'agentId': agentId,
             'isStream': 'False',
-            'contents': contents
+            'contents': payload_contents
         }
         
         response = await request.app.state.http_client.post(
